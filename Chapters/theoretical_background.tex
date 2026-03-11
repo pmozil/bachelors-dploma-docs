@@ -1,0 +1,662 @@
+\chapter{Theoretical Background }
+
+In this chapter, we will look at the RISC-V ISA, analyze the main elements of developing 
+a CPU with SpinalHDL \cite{SpinalHDL2018} on the case of \textbf{VexiiRiscV},
+look at the litex ecosystem and framework,
+how custom extensions are ususally implemented, and how software is run on the SoCs produced with such
+methods.
+
+\section{The RISC-V Architecture and VexiiRiscv Core}
+
+\subsection{Overview of the RISC-V ISA}
+
+The RISC-V instruction set architecture (ISA) \cite{RISC-VInternational2025} is an open standard  designed with simplicity, extensibility, and long-term sustainability in mind.
+Unlike proprietary architectures such as x86 or ARM, RISC-V is developed under an
+open governance model and can be freely implemented without licensing constraints.
+
+A central design principle of RISC-V is modularity.
+The base ISA provides only essential functionality,
+while optional extensions add specialized capabilities.
+Common extension subsets include integer multiplication (\textbf{IM}),
+atomic operations (\textbf{A}),
+single and double precision floating point arithmetic (\textbf{F/D})
+and compressed 16-bit instructions (\textbf{C}).
+
+Typical Linux-capable systems use configurations such as RV64IMAC \cite{Rakhmatov2023Survey},
+which includes general-purpose, compressed, floating-point,
+and atomic extensions, however, for our
+implementation, we use RV32IMA. \cite{LinuxOnLiteXGitHub}
+
+Importantly, RISC-V reserves opcode space for custom extensions.
+These custom instruction fields enable designers to introduce application-specific
+accelerators directly into the processor pipeline without
+conflicting with standard instructions.
+This extensibility forms the basis for the custom CXU interface described later in this chapter.
+
+\subsection{The VexiiRiscv Implementation}
+
+VexiiRiscv is a configurable RISC-V core implemented in SpinalHDL,
+a Scala-based hardware description language.
+Unlike traditional Verilog or VHDL, SpinalHDL supports
+generative and highly parameterized hardware construction.
+This approach allows for scalable design-space exploration, easier feature composition,
+and cleaner abstraction boundaries. \cite{SpinalHDL2018, VexiiRiscVGithub}
+
+The processor follows a classical pipelined architecture.
+The VexiiRiscv processor supports up to 5 stages,
+\textbf{Fetch}, \textbf{Decode}, \textbf{Execute}, \textbf{Memory} and \textbf{Write-back},
+with \textbf{Fetch + Execute} (possibly unified) and \textbf{Memory and Write-back} (also unified).
+
+One of the distinguishing characteristics of VexiiRiscv is its plugin-based architecture.
+Major features—including memory management units (MMU), caches, branch predictors,
+and custom execution units—are implemented as independent plugins.
+The CXU extension is an execute extension. All computation done by CXU coprocessors is done
+in the execution step of \textbf{VexiiRiscv}.
+
+\section{The litex SoC Ecosystem}
+
+\subsection{litex Framework Overview}
+
+litex \cite{LiteXGitHub} is a python-based SoC construction framework built on top of Migen \cite{MiSoC2014}.
+It enables automated generation of FPGA-based SoCs by integrating CPU cores,
+memory controllers, interconnects, and peripherals into a cohesive hardware platform.
+
+Within this ecosystem, litex acts as the integration layer between the VexiiRiscv CPU
+core and FPGA peripherals such as UART, Ethernet \cite{LiteEthGithub}, timers \cite{LiteXGitHub},
+and external memory controllers \cite{LiteDramGithub, LitePcieGithub}.
+The framework abstracts low-level hardware connectivity and provides a unified build
+system for generating bitstreams and associated firmware.
+
+The framework automatically generates HDL, memory maps,  CSR definitions and software headers.
+
+\subsection{Memory-Mapped Architecture}
+
+Litex uses memory-mapped I/O.
+Peripherals are accessed by reading or writing specific addresses:
+
+\begin{verbatim}
+#define UART_BASE 0xF0001000
+\end{verbatim}
+
+Software interacts with hardware by manipulating these addresses.
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm and 0.5cm,
+        master/.style={draw, rectangle, minimum width=3.5cm, minimum height=1.5cm, align=center, fill=red!10, rounded corners, font=\bfseries},
+        slave/.style={draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, align=center, fill=blue!10, rounded corners},
+        bus/.style={draw, rectangle, minimum width=15cm, minimum height=1cm, align=center, fill=gray!20, font=\bfseries\large},
+        arrow/.style={-Latex, thick},
+        bidir/.style={Latex-Latex, thick},
+        group/.style={draw, dashed, thick, fill=gray!5, rounded corners, inner sep=0.5cm}
+        box/.style={rectangle, draw, rounded corners=3pt,
+            minimum width=3.2cm, minimum height=0.75cm,
+            text centered, font=\small}, 
+    ]
+
+    \node[bus] (wishbone) {Wishbone Interconnect (32-bit)};
+
+    \node[master, above=1.5cm of wishbone, xshift=-4cm] (cpu) {VexiiRiscv CPU \\ \small + CXU Plugin};
+    \node[master, above=1.5cm of wishbone, xshift=4cm, fill=orange!10] (dma) {LiteEth DMA \\ \small (Network Master)}; 
+
+    \node[slave, below=1.5cm of wishbone, xshift=-6cm] (rom) {BootROM / \\ \small SPI Flash};
+    \node[slave, below=1.5cm of wishbone, xshift=-3cm] (litedram) {LiteDRAM \\ \small (Main Memory)};
+    \node[slave, below=1.5cm of wishbone, xshift=0cm] (liteuart) {LiteUART \\ \small (Serial Console)};
+    \node[slave, below=1.5cm of wishbone, xshift=3cm] (liteeth) {LiteEth MAC \\ \small (Network Slave)};
+    \node[slave, below=1.5cm of wishbone, xshift=6cm] (timer) {Timer / \\ \small Core CSRs};
+
+    \draw[bidir] (cpu.south) -- (cpu.south |- wishbone.north) node[midway, left, font=\small] {Instr / Data};
+    \draw[bidir] (dma.south) -- (dma.south |- wishbone.north) node[midway, right, font=\small] {RX / TX};
+
+    \draw[bidir] (rom.north |- wishbone.south) -- (rom.north);
+    \draw[bidir] (litedram.north |- wishbone.south) -- (litedram.north);
+    \draw[bidir] (liteuart.north |- wishbone.south) -- (liteuart.north);
+    \draw[bidir] (liteeth.north |- wishbone.south) -- (liteeth.north);
+    \draw[bidir] (timer.north |- wishbone.south) -- (timer.north);
+
+    \end{tikzpicture}
+    \caption{Hardware architecture of the generated LiteX SoC}
+\end{figure}
+
+\subsection{Interconnect and Control}
+
+litex commonly uses the Wishbone bus as its on-chip interconnect standard.
+Wishbone is a simple and flexible synchronous bus protocol that supports
+master-slave communication between cores and peripherals.
+It enables memory-mapped I/O and simplifies peripheral integration. \cite{LiteXGitHub}
+
+Control and Status Registers (CSRs) provide a structured mechanism for software-hardware communication.
+CSRs are memory-mapped registers that allow software to configure hardware blocks,
+query status information, and trigger operations \cite{LiteDramGithub, LiteXGitHub}.
+This abstraction is essential for interacting with accelerators and managing runtime behavior.
+
+\subsection{Memory Management}
+
+litex integrates external memory controllers through LiteDRAM \cite{LiteDramGithub},
+which provides support for SDRAM and DDR memory devices.
+LiteDRAM abstracts memory timing, initialization, and refresh management,
+exposing a consistent interface to the system bus.
+
+The SoC memory map defines address regions for ROM, SRAM, DRAM, CSRs, and peripherals.
+Proper memory layout is particularly important for Linux-based systems,
+where kernel placement, device tree configuration,
+and bootloader operation depend on predictable address organization.
+
+\section{Software Development for litex-Based SoCs}
+
+Developing software for a \textbf{litex}-based SoC requires
+cross-compilation and careful linking against the target memory map.
+Since litex systems typically use RISC-V softcores (e.g., VexRiscv),
+programs must be compiled for the appropriate architecture. \cite{LiteXGitHub}
+
+\subsection{Cross-Compilation}
+
+Software is compiled on a host machine using a toolchain for the desired risc-v architecrure.
+
+The resulting ELF binary is then loaded into on-chip memory
+(SRAM, DRAM, or SPI Flash), as in \cite{CXUPlayground}.
+
+\subsection{Linker Scripts}
+
+litex SoCs define a memory map that must be respected during linking.
+A linker script specifies instruction mrmory region, data memory region and stack and heap placement.
+
+Correct linking ensures the program executes from valid memory
+and interacts properly with memory-mapped peripherals.
+
+\subsection{Bare-Metal vs Linux-Based Systems}
+
+The Litex platform supports bare-metal, RTOS-based and linux operating systems.
+Bare-metal software directly accesses memory-mapped registers,
+while Linux- and RTOS-based systems require drivers and standard system calls.
+
+\section{Buildroot}
+
+\textbf{Buildroot} is an embedded Linux build system used to
+generate complete root filesystems, toolchains, and kernel images
+for embedded targets.
+
+Buildroot automatescross-toolchain generation, linux kernel config,
+rootfs and pakcage selection.
+The workflow is as such: configuring the target,
+selecting the architecture,
+enabling desired packages and building the system complete image, while
+the output typically includes the kernel image, DTB and the filesystem image.
+
+Buildroot is commonly used with litex SoCs to produce
+bootable Linux images for FPGA-based systems. It's used with \cite{CXUPlayground}.
+
+\section{Custom Extension Units (CXU) Mechanism}
+
+\subsection{Coupling Architecture}
+
+Hardware accelerators can be integrated into a system using either
+tightly coupled or loosely coupled approaches. \cite{Gray2022CFU, Gray2025CXU}
+
+\textbf{Tightly coupled accelerators} are directly integrated into the CPU pipeline.
+They operate as execution units and are invoked through custom instructions.
+This approach offers low latency and direct register-file access but requires careful
+hazard and pipeline management.
+
+\textbf{Loosely coupled accelerators} are attached via system buses or DMA engines.
+They operate as independent hardware blocks, often accessed through memory-mapped interfaces.
+While simpler to integrate, they typically incur higher invocation latency.
+
+The CXU mechanism adopts a tightly coupled strategy,
+enabling instruction-level acceleration with minimal software overhead.
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}[
+        block/.style={draw, rectangle, minimum width=3cm, minimum height=4.5cm, align=center},
+        arrow/.style={-Latex, thick},
+        box/.style={rectangle, draw, rounded corners=3pt,
+            minimum width=3.2cm, minimum height=0.75cm,
+            text centered, font=\small}
+    ]
+        \node[block, fill=blue!10] (cpu) {VexiiRiscv CPU};
+        \node[block, fill=green!10, right=4cm of cpu] (cxu) {CXU Accelerator};
+        
+        \draw[arrow] ([yshift=1.5cm]cpu.east) -- node[above, font=\small] {rs1 (32-bit)} ([yshift=1.5cm]cxu.west);
+        \draw[arrow] ([yshift=0.5cm]cpu.east) -- node[above, font=\small] {rs2 (32-bit)} ([yshift=0.5cm]cxu.west);
+        \draw[arrow] ([yshift=-0.5cm]cpu.east) -- node[above, font=\small] {cxidx / opcode} ([yshift=-0.5cm]cxu.west);
+        
+        \draw[arrow] ([yshift=-1.5cm]cxu.west) -- node[above, font=\small] {rd (32-bit)} ([yshift=-1.5cm]cpu.east);
+        
+        \draw[arrow, dashed] ([yshift=2.2cm]cpu.east) -- node[above, font=\small\itshape] {Valid / Cmd Enable} ([yshift=2.2cm]cxu.west);
+        \draw[arrow, dashed] ([yshift=-2.2cm]cxu.west) -- node[above, font=\small\itshape] {Ready / Pipeline Stall} ([yshift=-2.2cm]cpu.east);
+    \end{tikzpicture}
+    \caption{CXU-CPU connection}
+\end{figure}
+
+\subsection{VexiiRiscv CXU User Plugin Interface}
+
+The VexiiRiscv plugin interface enables custom instruction
+integration at multiple levels of the pipeline.
+
+\subsubsection{Instruction Decoding}
+
+Specific opcode patterns are
+reserved and mapped to the CXU \cite{SpinalHDL2018}.
+During the decode stage, matching instructions are redirected to the custom execution logic by
+SpinalHDL's built-in extension logic, after which the CXU connector extension sends the decoded
+command to the CXU coprocessor.
+
+\begin{figure}[htb]
+    \centering
+    \begin{enumerate}
+        \item CXU state is updated through the use of $cxidx$ and $cxdata$ CSRs.
+        \item The CXU custom command is called with $rs1$ and $rs2$ as inputs and $rd$ as output.
+        \item Source operands are read from registers $rs1$ and $rs2$.
+        \item The CXU processes the input state and registers and returns the desired output.
+        \item The result is written back to the destination register $rd$.
+        \item Updated CXU state may be read from through the use of $cxidx$ and $cxdata$ CSRs.
+    \end{enumerate}
+    \caption{VexiiRiscv data flow}
+\end{figure}
+
+Multi-cycle CXU operations require pipeline stall mechanisms
+to preserve correctness. The plugin must signal readiness and manage structural,
+data, and control hazards to ensure correct execution ordering.
+
+\section{Linux Support on litex}
+
+\subsection{Hardware Requirements}
+
+Running Linux on a RISC-V SoC requires \cite{LinuxOnLiteXGitHub}
+A Memory Management Unit (MMU) for virtual memory,
+atomic instruction support (RV32A/RV64A) for synchronization primitives and
+a supervisor privilege mode.
+
+These features are enabled through appropriate VexiiRiscv plugins
+and litex SoC configuration parameters.
+
+\subsection{The Boot Process}
+
+The Linux boot flow typically involves multiple stages.
+OpenSBI \cite{OpenSBIGithub} provides the Supervisor Binary Interface (SBI),
+acting as a firmware layer between machine mode and the operating system.
+It handles low-level initialization and exposes standardized services to the kernel.
+
+A secondary bootloader such as U-Boot \cite{UBootWebsite} loads the Linux kernel image and optional
+initial ramdisk into memory. Once control is transferred,
+the Linux kernel initializes drivers, memory management, and user-space services.
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.8cm,
+        box/.style={draw, rectangle, minimum width=5cm, minimum height=1cm, rounded corners},
+        box/.style={rectangle, draw, rounded corners=3pt,
+            minimum width=3.2cm, minimum height=0.75cm, align=center,
+            text centered, font=\small}
+    ]
+        \node[box, fill=gray!20] (reset) {hardware reset};
+        \node[box, fill=blue!20, below=of reset] (litex) {litex bios (bootrom)\\ \small hardware init \& memory training};
+        \node[box, fill=purple!20, below=of litex] (opensbi) {opensbi\\ \small machine mode environment setup};
+        \node[box, fill=orange!20, below=of opensbi] (linux) {linux kernel\\ \small supervisor mode (mmu, dtb parsing)};
+        \node[box, fill=cyan!20, below=of linux] (user) {buildroot user space\\ \small init scripts \& cxu applications};
+        
+        \draw[->] (reset) -- (litex);
+        \draw[->] (litex) -- (opensbi);
+        \draw[->] (opensbi) -- (linux);
+        \draw[->] (linux) -- (user);
+    \end{tikzpicture}
+    \caption{the litex soc linux boot process}
+\end{figure}
+
+\subsection{Device Tree Overlay (DTS)}
+
+The device tree describes the hardware layout to the Linux kernel \cite{DeviceTreeDoc}.
+litex generates a hardware description that is translated into a Device Tree Source (DTS) file.
+This file specifies CPU configuration, memory regions, peripheral addresses,
+and interrupt mappings. The kernel uses this information to configure drivers
+and manage hardware resources dynamically.
+
+\section{Lattice-Based Cryptography}
+
+\subsection{Post-Quantum Context}
+
+Classical public-key cryptosystems such as RSA and elliptic curve cryptography
+rely on number-theoretic problems vulnerable to Shor's algorithm on sufficiently powerful
+quantum computers. This motivates the development of post-quantum cryptographic schemes.
+\cite{Vranken2023UniformMul, Levi2020RISQV, Sozbilir2020Kyber,, Franchetti2024MultiWord}
+
+Lattice-based cryptography is among the leading post-quantum approaches and forms the
+basis of NIST-selected standards such as ML-KEM (formerly Kyber) and ML-DSA (formerly Dilithium).
+These schemes rely on hardness assumptions related to structured lattice problems.
+
+\section{The AES Encryption}
+
+\textbf{AES} (Advanced Encryption Standard) \cite{NISTAES} is a symmetric encryption algorithm used to secure sensitive information. It was established by the U.S. National Institute of Standards and Technology and is widely used for encrypting sensitive information.
+Due to it's definition, it m aps well onto hardware.
+
+AES \cite{NISTAES} is based on a substitution-permutation network and can be efficiently implemented in both software and hardware. AES operates on a block of 16 bytes arranged in column-major order, called the \textbf{State}.
+
+The key size used for an AES cipher specifies the number of transformation rounds that convert the plaintext into the ciphertext. The number of rounds are:
+
+\begin{itemize}
+    \item 10 rounds with 128-bit keys
+    \item 12 rounds with 192-bit keys
+    \item 14 rounds with 256-bit keys
+\end{itemize}
+
+Each round consists of several processing steps. A set of inverse rounds are applied during decryption to recover the plaintext.
+
+The transformation steps are as such:
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.6cm and 1.5cm,
+        box/.style={draw, rectangle, minimum width=3.5cm, minimum height=0.8cm, align=center, fill=blue!10, rounded corners},
+        keybox/.style={draw, rectangle, minimum width=2.5cm, minimum height=0.8cm, align=center, fill=red!10, rounded corners},
+        io/.style={draw, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=0.8cm, align=center, fill=green!10},
+        arrow/.style={-Latex, thick},
+        group/.style={draw, rectangle, dashed, thick, inner sep=0.4cm, fill=gray!10, rounded corners}
+    ]
+    \node[io] (plaintext) {Plaintext (128-bit)};
+    
+    \node[box, below=1cm of plaintext] (init_addkey) {AddRoundKey};
+    \node[keybox, right=of init_addkey] (key0) {Round Key 0};
+    
+    \node[box, below=1.2cm of init_addkey] (subbytes) {SubBytes};
+    \node[box, below=of subbytes] (shiftrows) {ShiftRows};
+    \node[box, below=of shiftrows] (mixcols) {MixColumns};
+    \node[box, below=of mixcols] (main_addkey) {AddRoundKey};
+    \node[keybox, right=of main_addkey] (key1_9) {Round Keys 1--9};
+
+    \node[box, below=2cm of main_addkey] (subbytes_f) {SubBytes};
+    \node[box, below=of subbytes_f] (shiftrows_f) {ShiftRows};
+    \node[box, below=of shiftrows_f] (fin_addkey) {AddRoundKey};
+    \node[keybox, right=of fin_addkey] (key10) {Round Key 10};
+
+    \node[io, below=1cm of fin_addkey] (ciphertext) {Ciphertext (128-bit)};
+
+    \begin{scope}[on background layer]
+        \node[group, fit=(subbytes) (shiftrows) (mixcols) (main_addkey), 
+              label=left:\rotatebox{90}{\textbf{9 Standard Rounds}}] (main_loop) {};
+              
+        \node[group, fit=(subbytes_f) (shiftrows_f) (fin_addkey), 
+              label=left:\rotatebox{90}{\textbf{Final Round}}] (final_loop) {};
+    \end{scope}
+
+    \draw[arrow] (plaintext) -- (init_addkey);
+    \draw[arrow] (key0) -- (init_addkey);
+    
+    \draw[arrow] (init_addkey) -- (subbytes);
+    
+    \draw[arrow] (subbytes) -- (shiftrows);
+    \draw[arrow] (shiftrows) -- (mixcols);
+    \draw[arrow] (mixcols) -- (main_addkey);
+    \draw[arrow] (key1_9) -- (main_addkey);
+
+    \draw[arrow, rounded corners=5pt] (main_addkey.south) -- ++(0,-0.4) -| 
+          ([xshift=-1cm]main_loop.west) |- node[pos=0.25, left] {Loop 9x} 
+          ([yshift=0.4cm]subbytes.north) -- (subbytes.north);
+    
+    \draw[arrow] (main_addkey) -- (subbytes_f);
+    
+    \draw[arrow] (subbytes_f) -- (shiftrows_f);
+    \draw[arrow] (shiftrows_f) -- (fin_addkey);
+    \draw[arrow] (key10) -- (fin_addkey);
+
+    \draw[arrow] (fin_addkey) -- (ciphertext);
+
+    \end{tikzpicture}
+    \caption{Flowchart of the AES encryption algorithm}
+\end{figure}
+
+\subsection{AES Round Operations}
+
+\subsubsection{KeyExpansion}
+
+The KeyExpansion step derives round keys from the original cipher key.
+
+\subsubsection{AddRoundKey}
+
+AddRoundKey performs a byte-wise XOR between the State and the round key.
+
+\subsubsection{MixColumns}
+
+MixColumns mixes each column using matrix multiplication in $GF(2^8)$.
+
+Each column is multiplied by the fixed matrix:
+
+$$
+\begin{bmatrix}
+02 & 03 & 01 & 01 \\
+01 & 02 & 03 & 01 \\
+01 & 01 & 02 & 03 \\
+03 & 01 & 01 & 02
+\end{bmatrix}
+$$
+
+\subsection{Speeding up AES with the CXU}
+
+AES could be sped up by having the arithmetic operations in $GF(2^8)$ be done by the extension.
+Instead of doing a loop of 5-6 iterations and doing 3-4 arithmetic operations in each iteration,
+an extension may be created to execute the arithmetic oepration in a finite field in a single CPU cycle.
+
+\section{GZIP}
+
+\textbf{GZIP} (GNU Zip) \cite{GZIPWebsite} is a widely used lossless compression format.
+It is based on the \textbf{DEFLATE} compression algorithm \cite{DEFLATESpec}, which combines
+dictionary-based compression and entropy encoding to reduce data size efficiently.
+
+A GZIP file consists of:
+
+\begin{itemize}
+    \item A header (metadata, flags, optional filename)
+    \item Compressed data (DEFLATE stream)
+    \item A footer (CRC-32 and original size)
+\end{itemize}
+
+\subsection{The DEFLATE Algorithm}
+
+The DEFLATE algorithm combines the LZ77 compression and huffman coding.
+The compression pipeline is therefore
+\begin{enumerate}
+    \item To detect repeated sequences (LZ77)
+    \item To encode literals and length-distance pairs
+    \item To apply Huffman coding to the symbol stream
+    \item To pack the result into a bit-stream
+\end{enumerate}
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[
+    node distance=0.7cm and 1.5cm,
+    box/.style={draw, rectangle, minimum width=3.5cm, minimum height=0.8cm, align=center, fill=blue!10, rounded corners},
+    keybox/.style={draw, rectangle, minimum width=2.5cm, minimum height=0.8cm, align=center, fill=red!10, rounded corners},
+    io/.style={draw, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=0.8cm, align=center, fill=green!10},
+    arrow/.style={-Latex, thick},
+    group/.style={draw, rectangle, dashed, thick, inner sep=0.4cm, fill=gray!10, rounded corners}
+]
+
+\node[io] (input) {Input Data Stream};
+
+\node[box, below=1cm of input] (lz77) {LZ77 Sliding Window\\Match Detection};
+
+\node[box, below=of lz77] (tokens) {Generate Symbols\\(Literals, Length, Distance)};
+
+\node[box, below=1.2cm of tokens] (freq) {Symbol Frequency\\Counting};
+
+\node[keybox, right=of freq] (tree) {Huffman Tree\\Generation};
+
+\node[box, below=of freq] (huff) {Huffman Encoding};
+
+\node[box, below=of huff] (pack) {Bitstream Packing};
+
+\node[io, below=1cm of pack] (output) {Compressed DEFLATE Stream};
+
+\begin{scope}[on background layer]
+
+\node[group, fit=(lz77) (tokens),
+      label=left:\rotatebox{90}{\textbf{LZ77 Stage}}] (lzgroup) {};
+
+\node[group, fit=(freq) (huff),
+      label=left:\rotatebox{90}{\textbf{Huffman Coding}}] (huffgroup) {};
+
+\end{scope}
+
+\draw[arrow] (input) -- (lz77);
+\draw[arrow] (lz77) -- (tokens);
+
+\draw[arrow] (tokens) -- (freq);
+
+\draw[arrow] (freq) -- (huff);
+\draw[arrow] (tree) -- (huff);
+
+\draw[arrow] (huff) -- (pack);
+\draw[arrow] (pack) -- (output);
+
+\end{tikzpicture}
+\caption{Flowchart of the DEFLATE compression pipeline}
+\end{figure}
+
+\subsection{LZ77 Compression}
+
+LZ77 operates using a sliding window over previously seen data.
+Repeated sequences are replaced with \textit{(length, distance)} pairs.
+
+After LZ77 processing, the data stream consists of:
+
+\begin{enumerate}
+    \item Literal bytes (0--255)
+    \item Length codes (representing match length)
+    \item Distance codes (representing match distance)
+\end{enumerate}
+
+The symbols are not stored directly; they are entropy encoded using Huffman coding.
+
+\subsection{Huffman Coding}
+
+Huffman coding assigns shorter bit patterns to frequently occurring symbols.
+
+\subsection{Dynamic vs Static Huffman Trees}
+
+DEFLATE supports:
+
+\begin{itemize}
+    \item \textbf{Static Huffman}: predefined code tables
+    \item \textbf{Dynamic Huffman}: code tables computed per block
+\end{itemize}
+
+Dynamic coding usually achieves better compression because it adapts
+to the local symbol frequency of each block.
+
+Such characteristics make DEFLATE a strong candidate for
+instruction-level acceleration via the CXU mechanism,
+particularly for:
+
+\begin{itemize}
+    \item Fast match search primitives
+    \item Parallel prefix bit-packing
+    \item Hardware-assisted CRC computation
+\end{itemize}
+
+In contrast to AES, which relies on algebraic transformations in $GF(2^8)$,
+GZIP compression primarily relies on pattern detection and entropy encoding
+to eliminate statistical redundancy in data.
+
+\subsection{Custom Instructions for DEFLATE Acceleration}
+
+To accelerate critical primitives in the DEFLATE pipeline,
+several custom instructions were implemented using
+the CXU extension mechanism.
+These instructions target operations that occur frequently in
+GZIP compression and decompression, particularly bit manipulation,
+Huffman decoding support, and address calculations for LZ77 back-references.
+
+The implemented instructions are described below.
+
+\subsubsection{Bit Reversal}
+
+The \textbf{cxu\_bitrev} instruction reverses the order of bits in a
+32-bit word. Bit reversal is useful in several bitstream manipulation
+tasks, including efficient construction of lookup indices for
+variable-length codes.
+
+Given an input value $x$, the instruction produces an output where
+bit $i$ of the result corresponds to bit $31-i$ of the input.
+
+$$
+y_i = x_{31-i}
+$$
+
+This operation is implemented purely combinationally by wiring the
+input bits to reversed output positions.
+
+\subsubsection{Bit Mask Generation}
+
+The \textbf{cxu\_mask} instruction generates a mask containing the
+lowest $n$ bits set to one.
+
+$$
+mask = (1 \ll n) - 1
+$$
+
+Such masks are frequently required when extracting variable-length
+bit fields from the compressed DEFLATE bitstream. Generating them
+in a single instruction reduces the number of shifts and arithmetic
+operations required in software.
+
+\subsubsection{Huffman Table Index Extraction}
+
+The \textbf{cxu\_huft\_idx} instruction computes a masked index value:
+
+$$
+index = x \;\&\; ((1 \ll n) - 1)
+$$
+
+This operation is commonly used during Huffman decoding when
+determining the lookup index into a decoding table based on the
+current bit buffer. By fusing the mask generation and bit extraction
+into a single instruction, the number of required operations in the
+decoding loop is reduced.
+
+\subsubsection{LZ77 Back-Reference Address Calculation}
+
+The \textbf{cxu\_copy\_addr} instruction accelerates address
+calculation for LZ77 back-references during decompression.
+
+In the DEFLATE algorithm, repeated sequences are encoded as
+\textit{(length, distance)} pairs. During decompression, the
+distance value determines how far back in the output window the
+copy operation should read.
+
+The instruction performs the following computation:
+
+$$
+addr = (w - dist\_base - extra) \bmod 2^{15}
+$$
+
+where:
+
+\begin{itemize}
+\item $w$ is the current write position in the sliding window,
+\item $dist\_base$ is the base distance value from the Huffman code,
+\item $extra$ represents additional bits extending the distance.
+\end{itemize}
+
+By combining subtraction and masking into a single hardware
+operation, the instruction reduces the arithmetic overhead in the
+inner decompression loop.
+
+\subsubsection{Implementation Characteristics}
+
+The CXU module is entirely combinational and does not maintain
+internal state. All instructions operate on two 32-bit operands
+and produce a single 32-bit result in the same cycle.
+
+Because no state is written, the state interface of the CXU unit
+remains unused. This simplifies integration and ensures that the
+custom instructions behave similarly to standard arithmetic
+instructions from the perspective of the processor pipeline.
+
+These instructions target frequently executed primitives in the
+DEFLATE decoding path and therefore provide opportunities for
+improving overall decompression throughput.
+

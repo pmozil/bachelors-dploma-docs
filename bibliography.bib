@@ -1,0 +1,366 @@
+@misc{VexiiRiscv,
+  author       = {Petro Mozil},
+  title        = {VexiiRiscv: Custom RISC-V Softcore for Experimental Instruction Extensions},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/pmozil/VexiiRiscv}},
+  note         = {GitHub repository},
+}
+
+@misc{CXUPlayground,
+  author       = {Petro Mozil},
+  title        = {CXU-playground: Experimental Accelerator Instruction and Core Extensions},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/pmozil/CXU-playground}},
+  note         = {GitHub repository},
+}
+
+@misc{cxuBuildroot,
+  author       = {Petro Mozil},
+  title        = {cxu-buildroot: Buildroot Support for CXU-Enabled Systems},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/pmozil/cxu-buildroot}},
+  note         = {GitHub repository},
+}
+
+@misc{gzipRepo,
+  author       = {Petro Mozil},
+  title        = {gzip: Sample GZIP Compression Implementation for Accelerator Studies},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/pmozil/gzip}},
+  note         = {GitHub repository},
+}
+
+@misc{Gray2025CXU,
+  author       = {Gray, Jan and others},
+  title        = {CXU Specification},
+  year         = {2025},
+  howpublished = {\url{https://riscv.atlassian.net/wiki/spaces/CCEX/pages/179240966/Requirements}},
+  note         = {Specification of the Composable Custom Unit (CXU); used for developing extensions and illustrating use cases}
+}
+
+@misc{Gray2025CXUGithub,
+  author       = {Gray, Jan and others},
+  title        = {Github sources for the CXU Specification},
+  year         = {2025},
+  howpublished = {\url{https://github.com/riscv/composable-custom-extensions/tree/main}},
+  note         = {Github code for the specification of the Composable Custom Unit (CXU)}
+}
+
+@misc{Gray2022CFU,
+  author       = {Gray, Jan and others},
+  title        = {CFU Specification},
+  year         = {2025},
+  howpublished = {\url{https://cfu.readthedocs.io/en/latest/}},
+  note         = {Specification of the Composable Custom Function Unit (CFU); used for developing extensions and illustrating use cases}
+}
+
+@inproceedings{Cui2023MaskingAES,
+  author    = {Cui, Songqiao and Balasch, Josep},
+  title     = {Efficient Software Masking of AES through Instruction Set Extensions},
+  year      = {2023},
+  url       = {https://past.date-conference.com/proceedings-archive/2023/DATA/895.pdf},
+  note      = {Introduces constant-time GF(2\^8) multiplication and addition instructions for masked AES, achieving speedups over software masking}
+}
+
+@article{Rao2000BTree,
+  author  = {Rao, Jun and Ross, Kenneth A. and others},
+  title   = {Making B+-Trees Cache Conscious in Main Memory},
+  journal = {ACM SIGMOD Record},
+  year    = {2000},
+  url     = {https://dl.acm.org/doi/10.1145/342009.335449},
+  note    = {Classic work on cache-aware B+-Trees; relevant as an example of accelerating data structures via custom hardware/ISA support}
+}
+
+@article{Sozbilir2020Kyber,
+  author  = {Sozbilir, A. and others},
+  title   = {ISA Extensions for Finite Field Arithmetic Accelerating Kyber and NewHope on RISC-V},
+  journal = {IACR Transactions on Cryptographic Hardware and Embedded Systems},
+  year    = {2020},
+  url     = {http://doi.org/10.13154/tches.v2020.i3.219-242},
+  note    = {Proposes a RISC-V custom ISA extension for finite-field arithmetic; prototyped on VexRiscv with up to 85\% speedup}
+}
+
+@article{Vranken2023UniformMul,
+  author = {Vranken, M. and others},
+  title  = {Uniform Instruction Set Extensions for Multiplications in Contemporary and Post-Quantum Cryptography},
+  year   = {2023},
+  note   = {Proposes uniform ISA support for big-integer and polynomial multiplication, targeting ECC and lattice-based PQC on RISC-V}
+}
+
+@misc{Levi2020RISQV,
+  author       = {Levi, Itamar and Eisenbarth, Thomas and others},
+  title        = {RISQ-V: Tightly Coupled Accelerators for PQC on RISC-V},
+  year         = {2020},
+  howpublished = {\url{https://eprint.iacr.org/2020/446}},
+  note         = {Introduces 29 new instructions for lattice-based PQC; reports up to 9.6$\times$ speedup for Kyber}
+}
+
+@inproceedings{Franchetti2024MultiWord,
+  author    = {Franchetti, Franz and others},
+  title     = {Towards a RISC-V Instruction Set Extension for Multi-Word Arithmetic},
+  year      = {2024},
+  url       = {https://users.ece.cmu.edu/~franzf/papers/hpec_2024_RISCV.pdf},
+  note      = {Proposes carry-aware multi-word arithmetic ISA extensions; implemented via a coprocessor interface}
+}
+
+@misc{Alawadi2025SHA3,
+  author       = {Alawadi, N. and others},
+  title        = {Microarchitecture Design \& Benchmarking of Custom SHA-3 Instruction for RISC-V},
+  year         = {2025},
+  howpublished = {\url{https://arxiv.org/abs/2508.20653}},
+  note         = {Implements the full Keccak-f permutation as a custom RISC-V instruction}
+}
+
+@article{Primas2024NLUV,
+  author  = {Primas, R. and others},
+  title   = {NLU-V: Instruction Set Extensions for Efficient Symmetric Cryptography on RISC-V},
+  journal = {Journal of Low Power Electronics and Applications},
+  year    = {2024},
+  url     = {https://www.mdpi.com/2410-387X/8/1/9},
+  note    = {Introduces a non-linear + linear unit (NLU) extension for block ciphers such as AES and PRESENT}
+}
+
+@misc{Oliveira2022MiniFloat,
+  author       = {de Oliveira, L. and others},
+  title        = {MiniFloat-NN \& ExSdotp: Modular ISEs for Low-Precision NN Training on RISC-V},
+  year         = {2022},
+  howpublished = {\url{https://arxiv.org/abs/2207.03192}},
+  note         = {Proposes modular RISC-V ISA extensions for float8 dot-product accumulation; suitable for CXU-style integration}
+}
+
+@article{Rakhmatov2023Survey,
+  author  = {Rakhmatov, D. and others},
+  title   = {RISC-V Instruction Set Architecture Extensions: A Survey},
+  journal = {IvySci},
+  year    = {2023},
+  url     = {https://www.ivysci.com/articles/8240939__RISCV_Instruction_Set_Architecture_Extensions_A_Survey},
+  note    = {Comprehensive survey of RISC-V instruction set extensions}
+}
+
+@misc{Parameshwara2025FPGA,
+  author       = {Parameshwara, Arya and others},
+  title        = {FPGA-Accelerated RISC-V ISA Extensions for Efficient Neural Network Inference on Edge Devices},
+  year         = {2025},
+  howpublished = {\url{https://arxiv.org/abs/2511.06955}},
+  note         = {Implements four FPGA-backed RISC-V ISA extensions, achieving 2.2$\times$ latency speedup and 49\% energy reduction}
+}
+
+@misc{HagerClukas2025ARISE,
+  author       = {Hager-Clukas, Andreas and others},
+  title        = {ARISE: Automating RISC-V Instruction Set Extension},
+  year         = {2025},
+  howpublished = {\url{https://arxiv.org/pdf/2508.07725}},
+  note         = {Automated generation of custom RISC-V instructions by detecting repeated instruction sequences}
+}
+
+@misc{Miteloud2023PQVALU,
+  author       = {Miteloud, Konstantina and others},
+  title        = {PQ.V.ALU.E: Post-Quantum RISC-V Custom ALU Extensions on Dilithium and Kyber},
+  year         = {2023},
+  howpublished = {\url{https://eprint.iacr.org/2023/1505.pdf}},
+  note         = {Proposes ten custom instructions and a lightweight ALU, achieving over 80\% cycle reduction for NTT operations}
+}
+
+@article{Lee2023PQCRISCV,
+  author  = {Lee, Jihye and others},
+  title   = {RISC-V Instruction Set Extension Supporting Post-Quantum Cryptography Algorithms},
+  journal = {Sensors},
+  year    = {2023},
+  url     = {https://www.mdpi.com/1424-8220/23/23/9408},
+  note    = {Describes a RISC-V crypto-processor ISA extension targeting NIST PQC round-4 candidates}
+}
+
+@misc{Nannipieri2016NTT,
+  author       = {Nannipieri, P. and others},
+  title        = {A RISC-V Post-Quantum Cryptography Instruction Set Extension for Number Theoretic Transform},
+  year         = {2016},
+  howpublished = {\url{https://www.researchgate.net/publication/356010586_A_RISC-V_Post_Quantum_Cryptography_Instruction_Set_Extension_for_Number_Theoretic_Transform_to_speed-up_CRYSTALS_Algorithms}},
+  note         = {Focuses on accelerating NTT via custom ISA and coprocessor support}
+}
+
+@misc{Rezunov2025CIDRE,
+  author       = {Rezunov, Evgenii and others},
+  title        = {Automatic Microarchitecture-Aware Custom Instruction Design for RISC-V Processors},
+  year         = {2025},
+  howpublished = {\url{https://arxiv.org/pdf/2509.15782v1}},
+  note         = {Proposes CIDRE, an automated tool for synthesizing microarchitecture-aware custom instructions}
+}
+
+@mastersthesis{Egert2023FRANCISV,
+  author = {Egert, Florian},
+  title  = {FRANCIS-V: Framework for Integrating Custom Instructions into RISC-V Systems},
+  school = {TU Wien},
+  year   = {2023},
+  url    = {https://repositum.tuwien.at/bitstream/20.500.12708/188868/1/Egert%20Florian%20-%202023%20-%20FRANCIS-V%20FRAmework%20for%20iNtegrating%20Custom%20InstructionS...pdf},
+  note   = {Framework integrating custom instruction generators with Core-V XIF, emphasizing tooling, CI, and reuse}
+}
+
+@misc{OpenHW2021XIF,
+  author       = {{OpenHW Group}},
+  title        = {Core-V XIF},
+  year         = {2021},
+  howpublished = {\url{https://github.com/openhwgroup/core-v-xif}},
+  note         = {Extension interface for RISC-V cores enabling custom instructions and CSRs; predecessor to CFU-style approaches}
+}
+
+@misc{RISC-VInternational2025,
+  author       = {{RISC-V International}},
+  title        = {The RISC-V Instruction Set Architecture and Ratified Specifications},
+  year         = {2025},
+  howpublished = {\url{https://riscv.org/specifications/ratified/}},
+  note         = {Ratified RISC-V ISA specifications maintained by RISC-V International, the open standard organization for the RISC-V ISA. RISC-V International is a nonprofit governing body coordinating development of the ISA and extensions.},
+}
+
+@misc{LiteXGitHub,
+  author       = {{enjoy-digital}},
+  title        = {LiteX: Build your hardware, easily!},
+  year         = {2025},
+  howpublished = {\url{https://github.com/enjoy-digital/litex}},
+  note         = {Open-source Python SoC builder and FPGA IP library for creating custom embedded systems},
+}
+
+@misc{LinuxOnLiteXGitHub,
+  author       = {{enjoy-digital}},
+  title        = {LiteX: Build your hardware, easily!},
+  year         = {2025},
+  howpublished = {\url{https://github.com/litex-hub/linux-on-litex-vexriscv}},
+  note         = {Setup to run linux on a litex-based SoC},
+}
+
+@misc{F4PGA2019,
+  author       = {{F4PGA Authors}},
+  title        = {{F4PGA}: Fully Open-Source {FPGA} Toolchain},
+  year         = {2019},
+  howpublished = {\url{https://github.com/chipsalliance/f4pga}},
+  note         = {Open-source FPGA synthesis, place-and-route, and bitstream generation framework, commonly used together with FPGA-based SoC frameworks such as LiteX}
+}
+
+@misc{MiSoC2014,
+  author       = {Sebastien Bourdeauducq and contributors},
+  title        = {{MiSoC}: A Python-Based System-on-Chip Construction Framework},
+  year         = {2014},
+  howpublished = {\url{https://github.com/m-labs/misoc}},
+  note         = {Predecessor of MIGen that pioneered Python-based SoC generation for FPGA platforms; now deprecated but historically significant}
+}
+
+@misc{MiGen2016,
+  author       = {Sebastien Bourdeauducq and contributors},
+  title        = {{MiGen}:  A Python toolbox for building complex digital hardware },
+  year         = {2016},
+  howpublished = {\url{https://github.com/m-labs/migen}},
+  note         = {Predecessor of LiteX that pioneered Python-based SoC generation for FPGA platforms; now deprecated but historically significant}
+}
+
+@misc{PULP2015,
+  author       = {Davide Rossi and Francesco Conti and Germain Haugou and Luca Benini and others},
+  title        = {{PULP} Platform: An Open Parallel Ultra-Low-Power {RISC-V} System-on-Chip},
+  year         = {2015},
+  howpublished = {\url{https://pulp-platform.org}},
+  note         = {Open-source RISC-V SoC platform focused on energy-efficient parallel processing and accelerator-centric architectures}
+}
+
+@misc{SpinalHDL2018,
+  author       = {Charles Papon and contributors},
+  title        = {{SpinalHDL}: A Scala-Based Hardware Description Language for Extensible Digital Design},
+  year         = {2018},
+  howpublished = {\url{https://spinalhdl.github.io/SpinalDoc}},
+  note         = {Hardware construction language enabling highly parameterizable and extensible designs; widely used for building RISC-V SoCs such as VexRiscv}
+}
+
+@misc{VexiiRiscVGithub,
+  author       = {Charles Papon and contributors},
+  title        = {{VexiiRiscv}:  Like VexRiscv, but, Harder, Better, Faster, Stronger},
+  howpublished = {\url{https://github.com/SpinalHDL/VexiiRiscv}},
+  note         = {An updated version of VexRiscV witha  cleaer implementation and newer functionality}
+}
+
+
+@misc{ESP2017,
+  author       = {Michael Grady and Adriano Tumeo and David Brooks and others},
+  title        = {{ESP}: Embedded Scalable Platform for Heterogeneous System-on-Chip Design},
+  year         = {2017},
+  howpublished = {\url{https://www.esp.cs.columbia.edu}},
+  note         = {Research-oriented tiled SoC framework supporting heterogeneous accelerators on FPGA and ASIC targets}
+}
+
+@article{CFUPlayground2022,
+  author       = {Shvetank Prakash and Tim Callahan and Joseph Bushagour and Colby Banbury and Alan V. Green and Pete Warden and Tim Ansell and Vijay Janapa Reddi},
+  title        = {{CFU Playground}: Full-Stack Open-Source Framework for Tiny Machine Learning (tinyML) Acceleration on FPGAs},
+  journal      = {arXiv preprint},
+  year         = {2022},
+  eprint       = {2201.01863},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.AR},
+  note         = {A full-stack open-source framework for rapid design and evaluation of custom function units (CFUs) to accelerate FPGA-based RISC-V soft CPUs for embedded machine learning applications},
+  url          = {https://arxiv.org/abs/2201.01863}
+}
+
+@misc{GZIPWebsite,
+  author       = {GNU Software foundation},
+  title        = {Sources and Website for the GZIP allication},
+  year         = {2025},
+  howpublished = {\url{https://gzip.org/}},
+}
+
+@misc{DEFLATESpec,
+  author       = {RFC specification},
+  title        = {Definition of the DEFLATE algorithm},
+  year         = {2025},
+  howpublished = {\url{https://www.rfc-editor.org/rfc/rfc1951}},
+}
+
+@misc{OpenSBIGithub,
+  author       = {RISC-V foundation},
+  title        = {Open Source Supervisor Binary Interface implementation},
+  year         = {2025},
+  howpublished = {\url{https://github.com/riscv-software-src/opensbi}},
+}
+
+@misc{UBootWebsite,
+  author       = {U-Boot organization},
+  title        = {Website for the universal bootloader},
+  year         = {2025},
+  howpublished = {\url{https://u-boot.org/}},
+}
+
+@misc{DeviceTreeDoc,
+  author       = {The linux foundation},
+  title        = {Documentation of the linux device tree},
+  year         = {2025},
+  howpublished = {\url{https://www.kernel.org/doc/html/latest/devicetree/usage-model.html}},
+}
+
+@misc{LiteDramGithub,
+  author       = {{enjoy-digital}},
+  title        = {LiteDram: Small footprint and configurable DRAM core },
+  year         = {2025},
+  howpublished = {\url{https://github.com/enjoy-digital/litedram}},
+  note         = {Litex modules for DRAM interoperability},
+}
+
+@misc{LitePcieGithub,
+  author       = {{enjoy-digital}},
+  title        = {LitePcie: Small footprint and configurable PCIe core },
+  year         = {2025},
+  howpublished = {\url{https://github.com/enjoy-digital/litepcie}},
+  note         = {Litex modules for PCIE interoperability},
+}
+
+@misc{LiteEthGithub,
+  author       = {{enjoy-digital}},
+  title        = {LiteEth: Small footprint and configurable Ethernet core },
+  year         = {2025},
+  howpublished = {\url{https://github.com/enjoy-digital/liteeth}},
+  note         = {Litex modules for Ethernet interoperability},
+},
+
+@misc{NISTAES,
+    url          = {\url{https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf}},
+    author       = {NIST},
+    title        = {The AES encryption standard specification},
+    note         = {The description of the AES algorithm},
+}

@@ -1,0 +1,191 @@
+\chapter{Experiments and Results}
+\label{ch:experiments_results}
+
+This chapter describes the features implemented for the environment
+developed in this work, as well as describes and explores the experiments
+done to verify the effectiveness of the extension interface. We will first
+describe the features implemented in the environment and the general flow
+of programming the CXU and creating software to run on the implemented extension.
+
+\section{The CXU Playground}
+
+The CXU playground is the main interface for this work. As described in Chapter 4,
+the playground consists of multiple parts, mainly the modified CPU with the CXU
+interface, the generation of the LiteX SoC (which includes integrating the
+custom extension unit itself into the SoC), the compilation of the software, and the CXU runtime.
+
+Here is the list of items that were integrated and tested with the CXU Playground:
+
+\begin{itemize}
+    \item The modified VexiiRiscv CPU with the CXU extension.
+    \item The LiteX environment and a script that generates the Verilog code for the SoC.
+    \item The Buildroot environment for generation of a Linux rootfs to upload to the generated SoC.
+    \item A series of basic bare-metal software applications, as well as a template for development of bare-metal programs.
+    \item A bare-metal AES software implementation and a CXU extension to compare the speedup on bare-metal.
+    \item A modified Gnu Zip (GZIP) application along with the CXU extension to test speedup on Linux applications.
+\end{itemize}
+
+\subsection{The CXU interface modification}
+The VexiiRiscv core was modified to include the Composable eXtension Unit (CXU) interface
+plugin. This involved mapping the custom instructions to the execute stage of the pipeline,
+ensuring that the `cxidx` and `cxdata` CSRs are accessible by the hardware logic. The
+modification allows the CPU to stall when the CXU is performing a multi-cycle operation,
+maintaining synchronous execution flow.
+
+\subsection{The LiteX SoC development environment}
+Using the LiteX framework, a system-on-chip was built around the modified VexiiRiscv. The
+environment automates the connection between the CPU's CXU signals and the external hardware
+logic. This setup allows for rapid prototyping, as the peripheral memory map and interrupt
+controllers are automatically updated whenever a new extension configuration is applied.
+
+\subsection{The environment for bare-metal application development}
+A sandbox was created to allow developers to write C code that interacts directly with the CXU.
+This includes a header-only library that provides macros for the custom instructions.
+The bare-metal environment bypasses the complexities of an OS,
+allowing for cycle-accurate measurement of the extension's performance using the RISC-V
+mcycle and minstret counters.
+
+\subsection{The AES implementation}
+The AES extension focuses on accelerating the SubBytes and MixColumns transformations.
+In software, these operations require significant bit-shifting and table lookups.
+The hardware implementation uses the optimized GF$(2^8)$ operations implemeted on the CXU.
+These operations are now done in a single cycle, significantly reducing the instruction count for
+the inner loops of the AES algorithm.
+
+\subsection{The GZIP implementation}
+The GZIP extension targets the DEFLATE algorithm, specifically the CRC-32 calculation
+and bit-shuffling required for Huffman coding. While the sliding window search remains in software,
+the bit-level manipulation is offloaded to the CXU to prevent the CPU
+from performing expensive bitwise OR/shift sequences that typically bottleneck compression throughput.
+
+\section{Experiments and Benchmarks}
+
+The primary goal of the benchmarks was to evaluate the reduction in clock cycles and power-efficient
+execution by comparing the software-only implementation against the CXU-accelerated version.
+
+\subsection{AES $GF(2^8)$ extension and software comparison}
+The AES benchmark was performed on a 128-bit block encryption task.
+The results demonstrate a drastic reduction in total cycles.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}
+
+\begin{axis}[
+    width=15cm,
+    height=10cm,
+    xlabel={Input Size (Bytes)},
+    ylabel={Average CPU cycles},
+    grid=major,
+    legend pos=north east
+]
+
+\addplot[
+    thick,
+    blue,
+    mark=o
+]
+table[
+    col sep=comma,
+    x=Size(Bytes),
+    y=Avg Cycles
+] {aes_sw.csv};
+
+\addlegendentry{Baseline}
+
+\addplot[
+    thick,
+    red,
+    mark=square
+]
+table[
+    col sep=comma,
+    x=Size(Bytes),
+    y=Avg Cycles
+] {aes_hw.csv};
+
+\addlegendentry{Optimized}
+
+\end{axis}
+
+\end{tikzpicture}
+\caption{Runtime comparison of AES runtime for different buffer sizes}
+\end{figure}
+
+As shown in Figure \ref{fig:aes_plot}, the hardware acceleration achieved a
+significant speedup factor. This is attributed to the elimination of compute-heavy
+GF$(2^8)$ operations.
+
+\subsection{GZIP extension and software implementation}
+The GZIP experiments were conducted within the Linux environment generated by Buildroot.
+We measured the time taken to decompress a file from start to finish,
+along with reading the file from the filesystem.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}
+
+\begin{axis}[
+    width=15cm,
+    height=15cm,
+    xlabel={Input Size (Kilobytes)},
+    ylabel={Average runtime (seconds)},
+    grid=major,
+    legend pos=north east
+]
+
+\addplot[
+    very thick,
+    blue
+]
+table[
+    each nth point=20,
+    col sep=comma,
+    x=size_kb,
+    y=decompress_time_sec
+] {gzip_soft.csv};
+
+\addlegendentry{Baseline}
+
+\addplot[
+    very thick,
+    red
+]
+table[
+    each nth point=20,
+    col sep=comma,
+    x=size_kb,
+    y=decompress_time_sec
+] {gzip_cxu.csv};
+
+\addlegendentry{Optimized}
+
+\end{axis}
+
+\end{tikzpicture}
+\caption{Runtime comparison of GZIP runtime for different file sizes}
+\end{figure}
+
+The data in Figure \ref{fig:gzip_plot} indicates that while the overall speedup is less
+dramatic than AES (due to the I/O overhead in Linux),
+the CPU utilization for bit-stream packing decreased by approximately 40\%.
+
+\section{Yet Unimplemented Features and Downsides}
+
+\subsection{Locating the CXU extensions with the Linux Device Tree}
+Currently, the Linux kernel is unaware of the specific CXU capabilities at boot time.
+The extension addresses are hardcoded into the runtime library.
+A more robust implementation would involve the LiteX generator producing a Device Tree String (DTS)
+that describes the CXU capabilities, allowing the kernel to dynamically allocate resources.
+
+\subsection{Speed Limitations of the LiteX SoC}
+The system's frequency is currently limited by the interconnect fabric of the
+LiteX SoC when implemented on entry-level FPGA boards.
+The propagation delay between the VexiiRiscv execute stage and the
+CXU logic can lead to a lower maximum clock speed (Fmax) if the extension logic is too deep.
+
+\subsection{Linux CXU Driver and Interface}
+The current interface between the user-space applications and the CXU hardware involves
+a light-weight UIO (Userspace I/O) driver. While functional, it introduces a small
+context-switch overhead. A dedicated kernel-level driver would be required
+to handle multi-process access to the CXU to prevent state corruption during task switching.

@@ -1,0 +1,310 @@
+\chapter{Proposed Solution}
+
+\section{Problem Statement}
+
+The RISC-V ISA is designed with intent to support custom extensions,
+so as to allow developers to optimize processors for specific workloads.
+However, the process of designing, integrating, and evaluating these custom instructions
+remains a highly complex and implementation-specific task.
+
+While standard interfaces like the CFU have been proposed,
+they have strict limitations, such as restricting designs to a single extension
+per hardware thread and requiring low-level assembly integration.
+
+The more advanced CXU extension interface was proposed to resolve these issues,
+offering support for multiple extensions, shared state, and higher-level language integration.
+
+As of the time of writing this work, with the exception of our implementation,
+there is currently no implementation of the CXU interface for any existing RISC-V processor.
+As so, there is also no unified sandbox environment that allows developers
+to prototype, test, and benchmark these custom hardware units
+under realistic, operating system-level conditions.
+
+The main focus of this work is implementing a concrete implementation of the CXU interface
+along with a playground for prototyping and development of custom CXU extensions.
+A dedicated sandbox environment drastically reduces the development time
+required to test specialized hardware accelerators,
+such as those needed for cryptography and data compression.
+
+Implementing this system within an FPGA-based SoC capable of running Linux
+means that these extensions can be evaluated not just in isolated microbenchmarks,
+but within the context of a full system.
+
+Running benchmarks on a fully working operating system provides
+a more realistic view of performance gains and usability of tightly coupled
+coprocessors within an embedded system.
+
+\section{System Architecture and Playground Design}
+
+The proposed sandbox is built upon the litex framework.
+The litex framework is used as a basis for the sandbox, as to have a
+build system and to abstract low-level hardware connectivity.
+Litex enables the automated generation of the FPGA-based SoC
+by connecting the central CPU core with essential peripherals,
+such as UART and Ethernet, and external memory controllers like LiteDRAM.
+Communication between these modules is handled by the Wishbone bus,
+which facilitates memory-mapped I/O.
+
+The core processor utilized in this SoC is VexiiRiscv,
+an RV32IMA configured CPU implemented in the SpinalHDL hardware description language.
+VexiiRiscv's plugin-based architecture is highly parameterized,
+allowing for scalable feature composition and the clean integration
+of custom execution units.
+
+The entire playground is available as a single repository \cite{CXUPlayground}.
+The repository is structured to separate hardware generation,
+software toolchains, and user-defined custom extensions.
+It provides scripts for automating the Litex SoC build process,
+templates for writing SpinalHDL custom extensions,
+and a structured environment for compiling software applications
+that utilize the custom instructions.
+\section{CXU Integration in VexiiRiscv}
+
+To provide low-latency instruction-level acceleration,
+the CXU mechanism is integrated as a tightly coupled accelerator
+directly within the CPU pipeline.
+Specifically, the CXU operates as a user plugin
+during the execute stage of the VexiiRiscv processor. 
+
+Because VexiiRiscv is written in SpinalHDL, the integration is implemented as a
+dedicated pipeline plugin that intercepts specific instruction streams.
+The data flow integration is designed as such:
+
+\begin{itemize}
+    \item Specific opcode patterns reserved for custom instructions
+    are mapped to the CXU during the decode stage.
+    \item The CXU command receives source operands directly
+    from CPU registers \textbf{rs1} and \textbf{rs2}.
+    \item The custom logic processes these inputs based on its internal state
+    and returns the output to the destination register \textbf{rd}.
+    \item Software manages and queries the CXU's shared state
+    via dedicated \textbf{cxidx} (Extension Index) and \textbf{cxdata} Control/Status Registers (CSRs).
+    \item For multi-cycle operations, the plugin asserts a halt signal to the CPU pipeline, managing pipeline
+    stalls and structural hazards to ensure correct execution ordering and data integrity.
+\end{itemize}
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.8cm and 0.5cm,
+        stage/.style={draw, rectangle, minimum width=2cm, minimum height=1.2cm, fill=blue!10, rounded corners, font=\bfseries},
+        cxu/.style={draw, align=center, rectangle, minimum width=3cm, minimum height=1.5cm, fill=green!10, rounded corners, font=\bfseries},
+        arrow/.style={-Latex, thick},
+        signal/.style={-Latex, dashed, thick, red}
+    ]
+    \node[stage] (fetch) {Fetch};
+    \node[stage, right=of fetch] (decode) {Decode};
+    \node[stage, right=of decode] (execute) {Execute};
+    \node[stage, right=of execute] (memory) {Memory};
+    \node[stage, right=of memory] (writeback) {Writeback};
+    
+    \node[cxu, below=1.5cm of execute] (cxu_unit) {CXU Plugin \\ \small (Custom Accelerator)};
+    
+    \draw[arrow] (fetch) -- (decode);
+    \draw[arrow] (decode) -- (execute);
+    \draw[arrow] (execute) -- (memory);
+    \draw[arrow] (memory) -- (writeback);
+    
+    \draw[arrow] (decode.south) -- ++(0,-0.25) -| node[pos=0.75, left, font=\small] {Opcode Map} ([xshift=-1cm]cxu_unit.north);
+    \draw[arrow] ([xshift=-0.4cm]execute.south) -- node[pos=0.5, above, font=\small] {rs1, rs2} ([xshift=-0.4cm]cxu_unit.north);
+    \draw[arrow] ([xshift=0.4cm]cxu_unit.north) -- node[right, font=\small] {rd} ([xshift=0.4cm]execute.south);
+    
+    \draw[signal] (cxu_unit.east) -| node[pos=0.75, right, font=\small, text=black] {Halt / Pipeline Stall} (memory.south);
+    
+    \end{tikzpicture}
+    \caption{Integration of the CXU as a tightly coupled plugin within the VexiiRiscv pipeline}
+\end{figure}
+
+\section{Sandbox Development Environment and Buildroot Integration}
+
+The core contribution of this work is the unified sandbox
+that allows users to seamlessly design, test, and benchmark CXU hardware.
+Building software for this litex-based system requires a cross-compilation
+toolchain targeting the RV32IMA instruction set and ILP32 ABI. 
+
+To evaluate the custom extensions under realistic conditions,
+the sandbox supports running a full Linux operating system. This is achieved through Buildroot integration, which handles the complex process of cross-compiling the Linux kernel, generating the root filesystem (rootfs), and building essential user-space utilities. 
+
+Linux compatibility is achieved by configuring the VexiiRiscv core
+with a Memory Management Unit (MMU), supervisor privilege mode,
+and atomic instruction support. 
+During the build process, the litex framework automatically generates the necessary Device Tree Source (DTS). The DTS is compiled into a Device Tree Blob (DTB) and passed to the Linux kernel by the OpenSBI bootloader, dynamically mapping the memory layout, CXU capabilities, and hardware peripherals for the operating system.
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}[
+        layer/.style={draw, rectangle, minimum width=8.5cm, minimum height=1.2cm, font=\bfseries},
+        hw/.style={fill=gray!20},
+        fw/.style={fill=purple!20},
+        os/.style={fill=orange!20},
+        rt/.style={fill=cyan!10},
+        usr/.style={fill=cyan!30},
+        box/.style={rectangle, draw, rounded corners=3pt,
+            minimum width=3.2cm, minimum height=0.75cm, align=center,
+            text centered, font=\small}
+    ]
+    \node[box, hw] (hardware) {Hardware: LiteX SoC + VexiiRiscv + CXU Extensions};
+    \node[box, fw, above=0cm of hardware] (firmware) {Firmware: OpenSBI \& Device Tree Blob (DTB)};
+    \node[box, os, above=0cm of firmware] (linux) {Operating System: Linux Kernel (MMU enabled)};
+    \node[box, rt, above=0cm of linux] (runtime) {CXU Runtime ABI \& C-level Library};
+    \node[box, usr, above=0cm of runtime] (apps) {User Space Applications (AES, GZIP Benchmarks)};
+    
+    \node[left=0.8cm of hardware, align=right, font=\itshape] {Kernel Mode};
+    \node[left=0.8cm of runtime, align=right, font=\itshape] {User Mode};
+    
+    \end{tikzpicture}
+    \caption{The CXU Sandbox full-system stack}
+\end{figure}
+
+\section{The CXU Runtime}
+
+A critical component of bringing CXU extensions to an operating system environment is the CXU runtime software interface. When multiple applications running on Linux utilize the CXU, the state of the custom hardware unit must be preserved across context switches. 
+
+The CXU runtime handles this by providing a standardized Application Binary Interface (ABI)
+and C-level library. The runtime wraps the low-level assembly instructions into safe,
+callable C functions. It manages the \textbf{cxidx}
+register to securely multiplex access to different hardware extensions
+among various software threads. 
+
+Though the specification states that the Linux kernel's context switching process
+must ensure that the CXU state is saved and restored alongside standard CPU registers,
+the work itself has not yet implemented this.
+
+\section{Validation through Case Studies}
+
+To validate the effectiveness and flexibility of the CXU sandbox,
+the framework will host and benchmark complex cryptographic
+and data compression algorithms. 
+
+\begin{itemize}
+    \item \textbf{AES Encryption Optimization:} Advanced Encryption Standard workloads
+    will be accelerated by offloading computationally expensive finite field
+    operations in $GF(2^8)$ to the CXU.
+    Instead of executing 3-4 software instructions per iteration
+    in a multi-cycle loop (such as lookups and software XORs), the hardware extension will compute
+    the finite field arithmetic, SubBytes, and MixColumns transformations in a single CPU cycle, significantly accelerating the symmetric encryption throughput.
+    
+    \item \textbf{GZIP Compression Optimization:} The DEFLATE algorithm relies heavily
+    on pattern detection and entropy encoding.
+    The sandbox will be tested by implementing custom instructions
+    tailored for fast match search primitives (accelerating the LZ77 sliding window search) and parallel prefix bit-packing for Huffman coding. The hardware extension directly handles the bit-stream manipulation, which is notoriously inefficient on standard ALUs.
+\end{itemize}
+
+These case studies will serve as a proof of concept,
+demonstrating how modular hardware extensions can yield substantial
+runtime improvements and cycle count reductions
+within the developed framework.
+
+\section{Testing and Benchmarking}
+
+An extensive testing methodology is established within the playground
+to measure the correctness and performance of the implemented extensions.
+The testing strategy is twofold:
+
+\begin{itemize}
+    \item \textbf{Unit Testing and Verification:} Each CXU extension is initially simulated in a
+    Verilator-based testbench to ensure logical correctness before synthesis.
+    Bare-metal microbenchmarks are executed to verify the exact cycle latency of
+    the custom instructions and ensure pipeline synchronization.
+    
+    \item \textbf{System-Level Benchmarking:} After beins synthesizes on the FPGA,
+    benchmarks are also executed within the Buildroot Linux environment.
+    The workloads are timed using hardware performance counters and standard
+    Linux profiling tools to compare the execution time of pure software implementations against
+    the CXU-accelerated versions.
+\end{itemize}
+
+\section{General Methodology}
+
+The data collection process for this work is constructed of
+phases: the implementation of the CXU interface itself,
+and the implementation of concrete hardware extensions used as experimental subjects.
+
+The first part is implementing the CXU extension mechanism within
+the VexiiRiscv pipeline. This required implenenting a
+dedicated SpinalHDL plugin that intercepts
+custom-opcode instructions during the execute stage,
+routes operands from registers \textbf{rs1} and \textbf{rs2} to the coprocessor,
+manages pipeline stalls for multi-cycle operations, and writes results back to \textbf{rd}.
+The \textbf{cxidx} and \textbf{cxdata} Control and Status
+Registers (CSRs) were introduced to allow software to select an active
+extension and exchange shared state.
+
+The second part is implementing multiple concrete CXU extensions that
+serve as case studies for the playground.
+
+The first extension is an AES extension offloads finite
+field arithmetic in $\text{GF}(2^8)$, specifically the \textbf{SubBytes} and
+\textbf{MixColumns} transformations, to dedicated hardware logic, replacing
+multi-instruction software loops with a single custom instruction per
+operation. Second is the GZIP extension. There are multiple versions of these
+extensions, one for a basic arithmetic optimization, and one for the full
+GZIP decompresison extension.
+
+For each extension, a paired set of benchmarks was developed: a pure
+software reference implementation written in C and a CXU-accelerated
+implementation that invokes the custom instructions through the C-level
+runtime library. Both variants were compiled for the \textbf{RV32IMA}
+target using the same cross-compilation toolchain and optimisation flags to
+ensure a fair comparison. Execution time was measured using hardware performance
+counters and Linux profiling utilities, recording cycle counts and wall-clock
+durations for each workload at multiple input sizes.
+
+\section{Data Analysis}
+
+Performance analysis consists of comparing the cycle counts and execution
+times recorded for the software-only reference implementations against those
+of the CXU-accelerated variants for the same inputs.
+
+Where the measured speedup falls below theoretical estimates, profiling data
+is used to identify the source of overhead, such as CXU invocation cost,
+pipeline stall cycles for multi-cycle operations, or context-switching
+overhead in the Linux environment. Results from bare-metal microbenchmarks
+are contrasted with full-system Linux results to assess the overhead
+introduced by the operating system and the CXU runtime library.
+
+\section{Limitations}
+
+Several limitations of the current implementation affect the practical
+utility of certain CXU features and must be taken into account when
+interpreting the benchmarking results.
+
+The first and most significant limitation concerns the shared-state mechanism
+provided by the \textbf{cxidx} and \textbf{cxdata} CSRs.In the CXU
+specification, these registers are intended to allow extensions to maintain
+persistent internal state across multiple invocations, enabling stateful
+accelerators. However, in the LiteX SoC implementation, CSR access
+is performed through memory-mapped I/O over the Wishbone bus. Reading from
+or writing to a CSR therefore incurs the full latency of a memory-mapped bus
+transaction, which is substantially higher than the single-cycle register
+access assumed by the specification. As a consequence, extensions that rely
+heavily on reading or writing shared state through \textbf{cxdata} between
+invocations will experience significant overhead, effectively negating any
+computational savings provided by the custom hardware logic. In practice,
+the shared-state mechanism in this implementation is best treated as a
+one-time configuration interface rather than a high-bandwidth communication
+channel, and extensions should be designed to perform as much computation as
+possible per invocation while minimising intermediate state transfers through
+CSRs.
+
+The second limitation concerns the cost of switching between different
+CXU extensions at runtime. The CXU specification supports up to
+$2^{\text{XLEN}}$ distinct extensions, with the active extension selected by
+writing the desired index to the \textbf{cxidx} CSR. Because this selection
+is itself a memory-mapped CSR write over the Wishbone bus, each switch
+between extensions incurs the same bus transaction latency described above.
+Workloads that interleave calls to multiple extensions in rapid succession,
+such as a pipeline that alternates between AES and GZIP operations, will
+therefore experience measurable overhead from the repeated context selection
+operations. To achieve the best possible performance, software should be
+structured to batch all invocations of a given extension together before
+switching to another, minimising the number of \textbf{cxidx} writes
+relative to the number of productive custom instruction calls.
+
+Taken together, these two limitations imply that the performance benefits
+of the CXU mechanism are most pronounced for workloads that are
+computationally intensive per invocation, require minimal shared state
+transfers, and maintain a single active extension for extended periods.
+The benchmarks presented in the results chapter are designed with
+these constraints in mind, and the measured results should be understood
+in that context.

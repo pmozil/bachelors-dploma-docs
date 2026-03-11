@@ -1,0 +1,356 @@
+\chapter{Related Work}
+
+In this chapter, we review frameworks for development of FPGA-based SOCs,
+works that explore hardware-based optimizations for certain algorithms
+and works that explore other ways of managing multiple extensions for RISC-V-based CPUs.
+
+\section{RISC-V Extensions For Custom Instruction Integration}
+
+In this section, we provide an overview of what the composable
+custom extensions specification is and what it 
+
+\subsection{CFU}
+
+Composable Custom Extensions \cite{Gray2022CFU, Gray2025CXU, Gray2025CXUGithub} is a
+RISC-V extension proposed by Jan Gray et. al. It's an extension aimed at making custom
+extensions modular and usable between different implementations of RISC-V CPUs.
+The motivation behind the composable custom extensions is that many RISC-V CPUs
+use some sort of custom extensions, yet there is no cross-implementation interoperability,
+and so there is many implementations of a single extension (e. g. SIMD multiply-accumulate)
+across multiple RISC-V CPU implementations. One solution to that is to provide a common logic
+interface to connect extensions to, and that is exactly the Composable Custom Extensions RISC-V 
+ISA extension.
+
+The first version of composable custom extensions if the Custom Function Unit (CFU).
+It was proposed in 2020 by Jan Gray et. al. and provides an interface to connect custom
+extensions to along with timing, logic and combinatorial constraints for what an extension 
+may do \cite{Gray2022CFU}. 
+We will go over what constitutes a composable extension in the theoretical background chapter.
+
+The CFU allows for a single extension to be used with a CPU, 
+and it requires the user to invoke a \textbf{custom-0|1|2|3} instruction,
+even when not using assembly, such that when using a higher-level language,
+the user would still need to invoke an assembly instruction. 
+The CFU also may not access memory. \cite{Gray2022CFU}
+
+\subsection{CXU}
+
+The CXU extension is a newer version of composable custom extensions.
+It allows for up to $2^{\textbf{XLEN}}$ custom extensions.
+It also allows for extensions to have a shared state and defines the limitations under which an extension may have access to memory. \cite{Gray2025CXU}
+
+Notably, the CXU specification also defines the ABI, making it possible to call the extension from a higher-level language without invoking the assembly instruction directly.
+An example of a CXU runtime is also provided, such that calls to the CXU extenisons
+would be wrapped in helper fucntions that select a proper extension, save the previous state
+and clean up the context afterwards.
+The specification was developed with support for operating systems in mind, and it
+specifies how the OS and process context switching is to be done with respect to the CXU
+state as well.
+
+\subsection{Core-V-XIF}
+
+\textbf{Core-V} E\textbf{X}tensible \textbf{I}nter\textbf{F}ace \cite{OpenHW2021XIF} is a
+RISC-V extension interface for implementing custom ISA extensions and coprocessors.
+As composable custom extensions, it's an interface that allows for custom extensions to be
+integrated into any CPU that supports the Core-V-XIF interface.
+
+Unlike composable custom extensions, Core-V-XIF allows for custom CSRs and overall is less 
+restrictive. Like the CFU Playgroud \cite{CFUPlayground2022}, there is an implementation of a
+sandbox for custom extensions, Francis-V \cite{Egert2023FRANCISV}.
+However, it's more tightly coupled to a certain CPU implementation, and would not allow
+for straightforward interoperability of implemented extensions.
+
+\section{Frameworks for FPGA-based SOC development}
+
+In this section, we provide an overview for frameworks that provide a base for developing 
+FPGA-based SOCs. These frameworks usually provide a way to extend the SOC
+with additional functionality, be it an ISA extension or an IO device, e. g.
+a specialized USB port for debugging.
+The frameworks usually consist of modules, which are then assembled into a bigger system.
+
+\subsection{Litex}
+
+\textbf{LiteX} \cite{LiteXGitHub} is an open-source python-based framework for building
+FPGA-based SoCs. It provides modules for the bus, IO and CPU integration
+(notably VexiiRiscv \cite{VexiiRiscVGithub}).
+It includes support for most popular dram modules used on FPGA devboards,
+support for ethernet, PCIE and SATA buses, support for SD card readers,
+inter-chip communication and most popular serial communication buses,
+notably I2C, UART, SPI and USB.
+
+The most popular implementation of an environment for development of CFUs,
+the  CFU Playground \cite{CFUPlayground2022}, used LiteX as a basis for it's environment.
+
+We use litex for our implementation as well.
+
+\subsection{F4PGA}
+
+\textbf{F4PGA} \cite{F4PGA2019} provides a fully open-source FPGA toolchain targeting multiple FPGA families. While not a SoC framework by itself,
+it is commonly used together with LiteX or custom SoC
+designs to enable reproducible, vendor-independent FPGA-based SoC development.
+
+\subsection{MiSoC}
+
+\textbf{MiSoC} \cite{MiSoC2014} is the predecessor of LiteX and introduced Python-based
+SoC generation concepts.
+Although deprecated, it is historically important and illustrates
+early approaches to modular FPGA SoC construction, which directly influenced LiteX’s
+architecture.
+
+\subsection{PULP Platform}
+
+\textbf{PULP} \cite{PULP2015} is an open-source RISC-V-based SoC platform focused
+on energy-efficient parallel processing and accelerator integration.
+It uses a cluster-based architecture and is widely used in academic
+research for DSP, cryptography, and accelerator-centric SoC exploration.
+
+\subsection{SpinalHDL}
+
+\textbf{SpinalHDL} \cite{SpinalHDL2018} is a hardware construction language
+often used to build extensible SoCs, most notably the VexRiscv core.
+Its plugin-based CPU architecture enables fine-grained custom instruction
+and pipeline extensions, making it highly relevant for composable extension research.
+
+SpinalHDL is used in the \textbf{VexiiRISCV} \cite{VexiiRiscVGithub} implementation, and we use
+VexiiRISCV as our CPU.
+
+\section{Sanboxes for simplified development of custom instruction hardware}
+
+\subsection{FRAVCIS-V}
+
+\textbf{FRANCIS-V}\cite{Egert2023FRANCISV}
+(FRAmework for iNtegrating Custom InstructionS into RISC‑V systems) \cite{Egert2023FRANCISV} is a
+framework aimed as making development and integration of custom extensions and coprocessors
+easier while designing RISC-V processors.
+It was proposed to make enginnering custom instructions easier.
+
+The framework provices an interface and methodology for connecting custom instruction
+hardware to a processor using the \textbf{Core-V-XiF} extension. It supports simulation,
+compilation and verificcation workflows. It allows users to automate most parts of development,
+much like the \textbf{CFU playground} and allows for customized RISC-V processors.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, draw, rounded corners=3pt,
+                minimum width=3.2cm, minimum height=0.75cm,
+                text centered, font=\small},
+    wbox/.style   = {rectangle, draw, dashed, rounded corners=4pt,
+                     inner sep=8pt},
+    arr/.style    = {->, >=stealth, thick},
+    darr/.style   = {<->, >=stealth, thick, gray},
+    node distance = 0.55cm and 1.3cm
+]
+
+\node[box, fill=purple!15]               (src)  {Custom Instr.\ RTL};
+\node[box, fill=purple!10, below=of src] (gen)  {Code Generator};
+\node[box, fill=purple!10, below=of gen] (drv)  {Driver / Wrapper};
+
+\node[box, fill=teal!15,   right=2.8cm of src]  (xif)  {Core-V XIF Interface};
+\node[box, fill=teal!10,   below=of xif]         (cpu)  {RISC-V CPU Core};
+\node[box, fill=teal!10,   below=of cpu]         (sim)  {Simulation / Verilator};
+
+\draw[arr] (src) -- (gen);
+\draw[arr] (gen) -- (drv);
+
+\draw[arr] (xif) -- (cpu);
+\draw[arr] (cpu) -- (sim);
+
+\draw[darr] (src)  -- (xif)  node[midway, above, font=\scriptsize]{};
+\draw[darr] (drv)  -- (sim)  node[midway, below, font=\scriptsize]{};
+
+\node[wbox, fit=(src)(gen)(drv), label={[font=\scriptsize]above:FRANCIS-V Tooling}] {};
+\node[wbox, fit=(xif)(cpu)(sim), label={[font=\scriptsize]above:Target CPU Environment}] {};
+
+\end{tikzpicture}
+\caption{FRANCIS-V framework overview.}
+\end{figure}
+
+\subsection{CFU Playground}
+The CFU Playground \cite{CFUPlayground2022} is an environment for development of custom 
+compute units on a litex SoC.
+
+The CFU Playground \cite{CFUPlayground2022} is a full-stack open-source playground designed
+for the rapid design and evaluation of Custom Function Units (CFUs)
+to accelerate FPGA-based RISC-V soft CPUs.
+
+Originally proposed for Tiny Machine Learning (tinyML) acceleration,
+it utilizes the LiteX framework as its architectural base to provide a ready-made SoC environment
+\cite{LiteXGitHub}. The playground allows users to implement specialized hardware logic and 
+write software scripts to invoke these extensions.
+
+The architecture is based on the initial version of the Composable Custom Extension specification,
+which connects a single extension to a hardware thread \cite{Gray2022CFU, CFUPlayground2022} and, usually
+a single CPU.
+While the interface supports up to 255 different function indices,
+it is characterized by some constraints: the unit may not access memory directly,
+and users must invoke instructions via assembly-level custom-0|1|2|3 opcodes,
+even when programming in higher-level languages \cite{Gray2022CFU}.
+These restrictions eventually led to the development of the more flexible CXU specification \cite{Gray2025CXU, Gray2025CXUGithub}.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, draw, rounded corners=3pt,
+                minimum width=3.2cm, minimum height=0.75cm,
+                text centered, font=\small},
+    wide/.style={rectangle, draw, rounded corners=3pt,
+                minimum width=6.8cm, minimum height=0.75cm,
+                text centered, font=\small},
+    wbox/.style={rectangle, draw, dashed, rounded corners=4pt,
+                inner sep=8pt},
+    arr/.style={->, >=stealth, thick},
+    darr/.style={<->, >=stealth, thick},
+    node distance=0cm and 0cm
+]
+\node[wide, fill=blue!15] (user)  {User C / C++ Application};
+\node[wide, fill=blue!10, below=of user] (cfu) {CFU Library (custom-0 intrinsics)};
+\node[box, fill=green!15, below=of cfu, xshift=-2cm] (litex) {LiteX SoC (VexRiscv)};
+\node[box, fill=green!10, right=of litex] (hw) {CFU Hardware (RTL)};
+\node[wide, fill=orange!15, below=of litex, xshift=2cm] (fpga) {FPGA Bitstream};
+
+\draw[decorate, decoration={brace, amplitude=6pt}, thick]
+    ([xshift=-2.0cm]user.north west) -- ([xshift=-2.0cm]cfu.south west)
+    node[midway, left=8pt, font=\scriptsize] {Software};
+\draw[decorate, decoration={brace, amplitude=6pt}, thick]
+    ([xshift=-2.0cm]litex.north west) -- ([xshift=-2.0cm]fpga.south west)
+    node[midway, left=8pt, font=\scriptsize] {Hardware};
+
+\end{tikzpicture}
+\caption{CFU Playground full-stack architecture.}
+\end{figure}
+
+\section{Applications of Custom Instruction Extensions in Cryptography and Systems}
+
+The purpose of CFU, FRANCIS-V and CXU is to provide a straightforward interface to create and
+wotk with custom extensions. This section is an overwiew of the applications of custom extensions,
+as well as some reflections on how these extensions may be used.
+
+These works illustrate practical motivations for custom instruction
+playground, particularly in security-critical and
+performance-sensitive domains.
+
+\subsection{Efficient Software Masking of AES through Instruction Set Extension}
+
+The work in \cite{Cui2023MaskingAES} investigates how architectural support can improve secure implementations of AES that are resistant to side-channel attacks. Software masking is widely used as a countermeasure against power analysis and timing attacks, but it typically introduces significant overhead due to the need for mask generation, masked S-box evaluation, and careful intermediate state handling.
+
+Instead of implementing a fully dedicated AES accelerator, the authors focus on accelerating specific primitives required for masked computation. In particular, they introduce instructions for constant-time finite-field arithmetic and masked substitution operations. This approach preserves the flexibility of a software implementation while reducing the computational penalty usually associated with masking.
+
+This work is especially relevant in the context of custom instruction research because it demonstrates that even narrowly scoped ISA extensions—when carefully designed—can significantly improve both security and performance without sacrificing portability.
+
+
+\subsection{ISA Extensions for Finite Field Arithmetic Accelerating Kyber and NewHope on RISC-V}
+
+The paper \cite{Sozbilir2020Kyber}
+focuses on accelerating lattice-based post-quantum cryptographic schemes,
+specifically \textbf{CRYSTALS-Kyber} and \textbf{NewHope}.
+These schemes rely on polynomial arithmetic over finite fields,
+particularly Number Theoretic Transform (NTT) operations and modular reductions.
+
+The authors introduce custom RISC-V ISA extensions tailored for finite field
+multiplication, modular reduction, and butterfly operations used in NTT.
+Rather than implementing a complete coprocessor,
+the extensions expose low-level arithmetic primitives that can be composed
+by software routines implementing the cryptographic algorithms.
+
+\subsection{Uniform Instruction Set Extensions for Multiplications in Contemporary and Post-Quantum Cryptography}
+
+The work \cite{Vranken2023UniformMul}
+proposes a unified set of ISA extensions targeting multiplication-heavy
+operations common across classical and post-quantum cryptographic schemes.
+
+Many cryptographic algorithms—ranging from elliptic curve cryptography (ECC)
+to lattice-based constructions—are dominated by multi-precision integer
+multiplication and modular arithmetic.
+The authors argue that instead of designing algorithm-specific extensions,
+a uniform set of multiplication and reduction primitives can support
+a wide range of schemes.
+
+The proposed extensions focus on word-level multiply-accumulate,
+high-part multiplication, and modular reduction primitives that
+can be composed efficiently by software.
+The evaluation demonstrates improvements across multiple algorithms,
+including both traditional public-key cryptography and NIST PQC candidates.
+
+\subsection{RISQ-V: Tightly Coupled Accelerators for Post-Quantum Cryptography on RISC-V}
+
+Levi et al.\cite{Levi2020RISQV} present RISQ-V, a tightly coupled accelerator
+architecture targeting lattice-based post-quantum cryptography (PQC) schemes
+such as CRYSTALS-Kyber. The work introduces 29 new custom RISC-V instructions
+designed to accelerate core arithmetic kernels, including modular reduction,
+polynomial multiplication, and Number Theoretic Transform (NTT) operations.
+
+Rather than relying on a loosely coupled external coprocessor,
+RISQ-V integrates the accelerator closely with the processor pipeline,
+reducing communication overhead and improving data locality.
+Experimental results demonstrate up to a 9.6 times speedup
+for Kyber compared to a baseline software implementation,
+highlighting the effectiveness of carefully co-designed ISA extensions for PQC workloads.
+
+\subsection{Towards a RISC-V Instruction Set Extension for Multi-Word Arithmetic}
+
+Franchetti et al. \cite{Franchetti2024MultiWord} focus on accelerating multi-word arithmetic,
+which is used in public-key cryptography and big-integer computations.
+The authors propose carry-aware instruction set extensions that explicitly manage
+carry propagation across multiple machine words, thereby reducing the overhead associated
+with software-emulated big-number arithmetic.
+
+Their design is implemented via a coprocessor interface,
+demonstrating how extended arithmetic primitives
+can be integrated without fundamentally altering the base pipeline.
+
+\subsection{Microarchitecture Design and Benchmarking of a Custom SHA-3 Instruction}
+
+This work \cite{Alawadi2025SHA3} explores the hardware realization of a full
+Keccak-f permutation as a single custom RISC-V instruction. Targeting SHA-3 hashing,
+the authors design a microarchitectural extension that encapsulates the complex
+round transformations of Keccak within a dedicated functional unit.
+
+By exposing the permutation as an atomic instruction, the design significantly
+reduces instruction count and control overhead compared to software implementations.
+The work includes detailed benchmarking and area–performance trade-off analysis,
+demonstrating substantial speedups and providing insight into the cost of
+integrating high-complexity cryptographic primitives directly into the ISA.
+
+\subsection{NLU-V: Instruction Set Extensions for Efficient Symmetric Cryptography}
+
+The work \cite{Primas2024NLUV} introduces NLU-V, an ISA extension
+that combines non-linear and linear transformation units to accelerate symmetric block
+ciphers such as AES and PRESENT.
+
+The extension integrates substitution-box (S-box)
+logic with linear diffusion operations into a unified hardware block, minimizing
+intermediate data movement and reducing pipeline stalls.
+
+\subsection{MiniFloat-NN and ExSdotp: Modular ISEs for Low-Precision Neural Network Training}
+
+The work \cite{Oliveira2022MiniFloat} proposes MiniFloat-NN and ExSdotp,
+modular RISC-V instruction set extensions targeting low-precision neural network training and inference.
+The design introduces float8 arithmetic support and specialized dot-product accumulation instructions, 
+enabling efficient execution of quantized neural network workloads.
+
+The extensions are structured to allow integration through coprocessor-style interfaces,
+aligning with custom extension (CXU) paradigms. Experimental results indicate
+improved energy efficiency and computational density for low-precision workloads,
+demonstrating the flexibility of RISC-V in accommodating emerging AI-centric computation models.
+
+
+\subsection{Linux on LiteX VexRiscV}
+
+The project \cite{LinuxOnLiteXGitHub} demonstrates the feasibility of
+running a full Linux operating system on a soft RISC-V core
+integrated within a \textbf{LiteX} FPGA-based SoC.
+
+The authors describe required architectural extensions,
+including Memory Management Unit support,
+interrupt handling, and peripheral integration necessary
+for Linux compatibility.
+The work highlights how modular SoC construction using LiteX
+enables integration of CPUs, memory controllers, and IO devices
+sufficient for a general-purpose operating system.
+
+The ability to run Linux on a softcore such as VexRiscV
+also provides a realistic evaluation environment for
+custom ISA extensions, allowing performance and usability
+to be assessed under real-world workloads rather than
+isolated microbenchmarks.
