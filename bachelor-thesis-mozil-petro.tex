@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Bachelor/Master Thesis 
+% Bachelor/Master Thesis
 % LaTeX Template
 % Version 2.5 (27/8/17)
 %
@@ -10,18 +10,18 @@
 % Vel (vel@latextemplates.com)
 %
 % This template is based on a template by:
-% Steve Gunn (http://users.ecs.soton.ac.uk/srg/softwaretools/document/templates/) 
+% Steve Gunn (http://users.ecs.soton.ac.uk/srg/softwaretools/document/templates/)
 % Sunil Patel (http://www.sunilpatel.co.uk/thesis-template/)
-% 
-% Modified by Rostysav Hryniv (2019) and Oleg Farenyuk (2024) 
-% 
+%
+% Modified by Rostysav Hryniv (2019) and Oleg Farenyuk (2024)
+%
 % Template license:
 % CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %----------------------------------------------------------------------------------------
-%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%    PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
 
 \documentclass[
@@ -46,7 +46,7 @@ headsepline, % Uncomment to get a line under the header
 
 \usepackage[ukrainian, english]{babel}
 
-% \usepackage{mathpazo} % Use the Palatino font by default 
+% \usepackage{mathpazo} % Use the Palatino font by default
   % O.F. Breaks Cyrillic, including Ukrainian, breaks bold, italic, etc. Commented out. The alternative is to use Lualatex.
 
 \usepackage[backend=bibtex,natbib=true]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
@@ -62,21 +62,21 @@ headsepline, % Uncomment to get a line under the header
 \pgfplotsset{compat=1.18}
 
 %----------------------------------------------------------------------------------------
-%	MARGIN SETTINGS
+%    MARGIN SETTINGS
 %----------------------------------------------------------------------------------------
 
 \geometry{
-	paper=a4paper, % Change to letterpaper for US letter
-	inner=2.5cm, % Inner margin
-	outer=3.8cm, % Outer margin
-	bindingoffset=.5cm, % Binding offset
-	top=1.5cm, % Top margin
-	bottom=1.5cm, % Bottom margin
-	%showframe, % Uncomment to show how the type block is set on the page
+    paper=a4paper, % Change to letterpaper for US letter
+    inner=2.5cm, % Inner margin
+    outer=3.8cm, % Outer margin
+    bindingoffset=.5cm, % Binding offset
+    top=1.5cm, % Top margin
+    bottom=1.5cm, % Bottom margin
+    %showframe, % Uncomment to show how the type block is set on the page
 }
 
 %----------------------------------------------------------------------------------------
-%	THESIS INFORMATION
+%    THESIS INFORMATION
 %----------------------------------------------------------------------------------------
 
 \thesistitle{CXU Playground: RISC-V Custom Extension Development Framework} % Your thesis title, this is used in the title and abstract, print it elsewhere with \ttitle
@@ -106,7 +106,7 @@ headsepline, % Uncomment to get a line under the header
 \pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
 
 %----------------------------------------------------------------------------------------
-%	TITLE PAGE
+%    TITLE PAGE
 %----------------------------------------------------------------------------------------
 
 \begin{titlepage}
@@ -119,7 +119,7 @@ headsepline, % Uncomment to get a line under the header
 \HRule \\[0.4cm] % Horizontal line
 {\huge \bfseries \ttitle\par}\vspace{0.4cm} % Thesis title
 \HRule \\[1.5cm] % Horizontal line
- 
+
 \begin{minipage}[t]{0.4\textwidth}
 \begin{flushleft} \large
 \emph{Author:}\\
@@ -129,37 +129,37 @@ headsepline, % Uncomment to get a line under the header
 \begin{minipage}[t]{0.4\textwidth}
 \begin{flushright} \large
 \emph{Supervisor:} \\
-\href{http://www.jamessmith.com}{\supname} % Supervisor name - remove the \href bracket to remove the link  
+\href{http://www.jamessmith.com}{\supname} % Supervisor name - remove the \href bracket to remove the link
 \end{flushright}
 \end{minipage}\\[3cm]
- 
+
 \vfill
 
 \large \textit{A thesis submitted in fulfillment of the requirements\\ for the degree of \degreename}\\[0.3cm] % University requirement text
 \textit{in the}\\[0.4cm]
 \groupname\\\deptname\\[2cm] % Research group name and department name
- 
+
 \vfill
 \includegraphics[height=2.5cm]{UCU_APPS_logo} % University/department logo - uncomment to place it
 % Logo taken from the official brandbook: https://ucu.edu.ua/brandbook/brand-book-sources/
-% UCU_APPS_logo.pdf 
+% UCU_APPS_logo.pdf
 
 \vfill
 {\large Lviv 2024}\\[4cm] % Date
- 
+
 \vfill
 \end{center}
 \end{titlepage}
 
 %----------------------------------------------------------------------------------------
-%	DECLARATION PAGE
+%    DECLARATION PAGE
 %----------------------------------------------------------------------------------------
 
 % \begin{declaration}
 % \addchaptertocentry{\authorshipname} % Add the declaration to the table of contents
 % \noindent I, \authorname, declare that this thesis titled, \enquote{\ttitle} and the work presented in it are my own. I confirm that:
 
-% \begin{itemize} 
+% \begin{itemize}
 % \item This work was done wholly or mainly while in candidature for a research degree at this University.
 % \item Where any part of this thesis has previously been submitted for a degree or any other qualification at this University or any other institution, this has been clearly stated.
 % \item Where I have consulted the published work of others, this is always clearly attributed.
@@ -167,10 +167,10 @@ headsepline, % Uncomment to get a line under the header
 % \item I have acknowledged all main sources of help.
 % \item Where the thesis is based on work done by myself jointly with others, I have made clear exactly what was done by others and what I have contributed myself.\\
 % \end{itemize}
- 
+
 % \noindent Signed:\\
 % \rule[0.5em]{25em}{0.5pt} % This prints a line for the signature
- 
+
 % \noindent Date:\\
 % \rule[0.5em]{25em}{0.5pt} % This prints a line to write the date
 % \end{declaration}
@@ -178,7 +178,7 @@ headsepline, % Uncomment to get a line under the header
 % \cleardoublepage
 
 %----------------------------------------------------------------------------------------
-%	QUOTATION PAGE 
+%    QUOTATION PAGE
 %----------------------------------------------------------------------------------------
 
 \vspace*{0.2\textheight}
@@ -188,16 +188,16 @@ headsepline, % Uncomment to get a line under the header
 \hfill Dave Barry
 
 %----------------------------------------------------------------------------------------
-%	ABSTRACT PAGE
+%    ABSTRACT PAGE
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
 \addchaptertocentry{\abstractname} % Add the abstract to the table of contents
-The Thesis Abstract is written here (and usually kept to just this page). The page is kept centered vertically so can expand into the blank space above the title too\ldots 
+The Thesis Abstract is written here (and usually kept to just this page). The page is kept centered vertically so can expand into the blank space above the title too\ldots
 \end{abstract}
 
 %----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
+%    ACKNOWLEDGEMENTS
 %----------------------------------------------------------------------------------------
 
 \begin{acknowledgements}
@@ -206,7 +206,7 @@ The acknowledgments and the people to thank go here, don't forget to include you
 \end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
-%	LIST OF CONTENTS/FIGURES/TABLES PAGES
+%    LIST OF CONTENTS/FIGURES/TABLES PAGES
 %----------------------------------------------------------------------------------------
 
 \tableofcontents % Prints the main table of contents
@@ -216,7 +216,7 @@ The acknowledgments and the people to thank go here, don't forget to include you
 \listoftables % Prints the list of tables
 
 %----------------------------------------------------------------------------------------
-%	ABBREVIATIONS
+%    ABBREVIATIONS
 %----------------------------------------------------------------------------------------
 
 \begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
@@ -241,7 +241,7 @@ The acknowledgments and the people to thank go here, don't forget to include you
 \end{abbreviations}
 
 %----------------------------------------------------------------------------------------
-%	PHYSICAL CONSTANTS/OTHER DEFINITIONS
+%    PHYSICAL CONSTANTS/OTHER DEFINITIONS
 %----------------------------------------------------------------------------------------
 
 \begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
@@ -254,7 +254,7 @@ Speed of Light & $c_{0}$ & \SI{2.99792458e8}{\meter\per\second} (exact)\\
 \end{constants}
 
 %----------------------------------------------------------------------------------------
-%	SYMBOLS
+%    SYMBOLS
 %----------------------------------------------------------------------------------------
 
 \begin{symbols}{lll} % Include a list of Symbols (a three column table)
@@ -270,13 +270,13 @@ $\omega$ & angular frequency & \si{\radian} \\
 \end{symbols}
 
 %----------------------------------------------------------------------------------------
-%	DEDICATION
+%    DEDICATION
 %----------------------------------------------------------------------------------------
 
-\dedicatory{For/Dedicated to/To my\ldots} 
+\dedicatory{For/Dedicated to/To my\ldots}
 
 %----------------------------------------------------------------------------------------
-%	THESIS CONTENT - CHAPTERS
+%    THESIS CONTENT - CHAPTERS
 %----------------------------------------------------------------------------------------
 
 \mainmatter % Begin numeric (1,2,3...) page numbering
@@ -288,14 +288,14 @@ $\omega$ & angular frequency & \si{\radian} \\
 % Remember -- some filesystems are case sensitive.
 
 \input{Chapters/introduction}
-\include{Chapters/related_work} 
+\include{Chapters/related_work}
 \include{Chapters/theoretical_background}
-\include{Chapters/proposed_solution} 
-\include{Chapters/experiments_and_results} 
-\include{Chapters/conclusions} 
+\include{Chapters/proposed_solution}
+\include{Chapters/experiments_and_results}
+\include{Chapters/conclusions}
 
 %----------------------------------------------------------------------------------------
-%	THESIS CONTENT - APPENDICES
+%    THESIS CONTENT - APPENDICES
 %----------------------------------------------------------------------------------------
 
 \appendix % Cue to tell LaTeX that the following "chapters" are Appendices
@@ -307,11 +307,11 @@ $\omega$ & angular frequency & \si{\radian} \\
 % \include{Appendices/AppendixB}
 
 %----------------------------------------------------------------------------------------
-%	BIBLIOGRAPHY
+%    BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
 
 \printbibliography[heading=bibintoc]
 
 %----------------------------------------------------------------------------------------
 
-\end{document}  
+\end{document}
