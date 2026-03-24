@@ -48,7 +48,7 @@ mcycle and minstret counters.
 \subsection{The AES implementation}
 The AES extension focuses on accelerating the SubBytes and MixColumns transformations.
 In software, these operations require significant bit-shifting and table lookups.
-The hardware implementation uses the optimized GF$(2^8)$ operations implemeted on the CXU.
+The hardware implementation uses the optimized GF$(2^8)$ operations implemented on the CXU.
 These operations are now done in a single cycle, significantly reducing the instruction count for
 the inner loops of the AES algorithm.
 
@@ -57,6 +57,18 @@ The GZIP extension targets the DEFLATE algorithm, specifically the CRC-32 calcul
 and bit-shuffling required for Huffman coding. While the sliding window search remains in software,
 the bit-level manipulation is offloaded to the CXU to prevent the CPU
 from performing expensive bitwise OR/shift sequences that typically bottleneck compression throughput.
+
+\subsection{TensorFlow Lite Micro MAC speedup}
+
+To measure the performance benefits of the CXU MAC extension,
+a standard TensorFlow Lite Micro benchmarking application was
+executed within the generated Buildroot Linux environment.
+
+The benchmark utilized a quantized model (e.g., the Person Detection or Micro Speech keyword spotting model)
+commonly used to evaluate TinyML performance.
+
+The execution latency was measured for both the baseline software implementation
+(using standard RV32IM instructions) and the CXU-accelerated implementation.
 
 \section{Experiments and Benchmarks}
 
@@ -67,52 +79,79 @@ execution by comparing the software-only implementation against the CXU-accelera
 The AES benchmark was performed on a 128-bit block encryption task.
 The results demonstrate a drastic reduction in total cycles.
 
-\begin{figure}[htb]
+\begin{table}[htb]
 \centering
-\begin{tikzpicture}
+\pgfplotstableread[col sep=comma]{aes_sw.csv}\dataSW
+\pgfplotstableread[col sep=comma]{aes_hw.csv}\dataHW
 
-\begin{axis}[
-    width=15cm,
-    height=10cm,
-    xlabel={Input Size (Bytes)},
-    ylabel={Average CPU cycles},
-    grid=major,
-    legend pos=north east
-]
+\pgfplotstablecreatecol[copy column from table={\dataHW}{[index]1}]{OptimizedCycles}{\dataSW}
 
-\addplot[
-    thick,
-    blue,
-    mark=o
-]
-table[
-    col sep=comma,
-    x=Size(Bytes),
-    y=Avg Cycles
-] {aes_sw.csv};
+\pgfplotstabletypeset[
+    row predicate/.code={
+        \pgfmathtruncatemacro{\isntmultiple}{mod(#1,10)}
+        \ifnum\isntmultiple>0
+            \pgfplotstableuserowfalse
+        \fi
+    },
+    columns={[index]0,[index]1,OptimizedCycles},
+    display columns/0/.style={
+        column name={\textbf{Input Size (Bytes)}},
+        int detect
+    },
+    display columns/1/.style={
+        column name={\textbf{Baseline (Avg Cycles)}},
+        int detect,
+        1000 sep={\,}
+    },
+    display columns/2/.style={
+        column name={\textbf{Optimized (Avg Cycles)}},
+        int detect,
+        1000 sep={\,}
+    },
+    every head row/.style={before row=\toprule,after row=\midrule},
+    every last row/.style={after row=\bottomrule}
+]{\dataSW}
 
-\addlegendentry{Baseline}
-
-\addplot[
-    thick,
-    red,
-    mark=square
-]
-table[
-    col sep=comma,
-    x=Size(Bytes),
-    y=Avg Cycles
-] {aes_hw.csv};
-
-\addlegendentry{Optimized}
-
-\end{axis}
-
-\end{tikzpicture}
 \caption{Runtime comparison of AES runtime for different buffer sizes}
-\end{figure}
+\end{table}
 
-As shown in Figure \ref{fig:aes_plot}, the hardware acceleration achieved a
+\begin{table}[htb]
+\centering
+\pgfplotstableread[col sep=comma]{aes_sw.csv}\dataSW
+\pgfplotstableread[col sep=comma]{aes_hw.csv}\dataHW
+
+\pgfplotstablecreatecol[copy column from table={\dataHW}{[index]3}]{CyclesPerByte}{\dataSW}
+
+\pgfplotstabletypeset[
+    row predicate/.code={
+        \pgfmathtruncatemacro{\isntmultiple}{mod(#1,10)}
+        \ifnum\isntmultiple>0
+            \pgfplotstableuserowfalse
+        \fi
+    },
+    columns={[index]0,[index]3,CyclesPerByte},
+    display columns/0/.style={
+        column name={\textbf{Input Size (Bytes)}},
+        int detect
+    },
+    display columns/1/.style={
+        column name={\textbf{Baseline (Cycles / Byte)}},
+        int detect,
+        1000 sep={\,}
+    },
+    display columns/2/.style={
+        column name={\textbf{Optimized (Cycles / Byte)}},
+        int detect,
+        1000 sep={\,}
+    },
+    every head row/.style={before row=\toprule,after row=\midrule},
+    every last row/.style={after row=\bottomrule}
+]{\dataSW}
+
+\caption{Throughput comparison of AES runtime for different buffer sizes}
+\end{table}
+
+As shown in the tables, the hardware acceleration achieved a
 significant speedup factor. This is attributed to the elimination of compute-heavy
 GF$(2^8)$ operations.
 
@@ -166,9 +205,25 @@ table[
 \caption{Runtime comparison of GZIP runtime for different file sizes}
 \end{figure}
 
-The data in Figure \ref{fig:gzip_plot} indicates that while the overall speedup is less
+The data in the plot indicates that while the overall speedup is less
 dramatic than AES (due to the I/O overhead in Linux),
-the CPU utilization for bit-stream packing decreased by approximately 40\%.
+the CPU utilization for bit-stream packing decreased by approximately 10\%.
+
+\subsection{Tensorflow MAC extension}
+
+Only a placeholder table right here for now.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Implementation} & \textbf{Inference Time (ms)} & \textbf{Speedup} \\ \hline
+Baseline Software (RV32IM) & BASELINETIME & 1.0x \\ \hline
+CXU MAC Extension & CXUTIME & SPEEDUPx \\ \hline
+\end{tabular}
+\caption{Inference latency comparison for TFLite Micro using the CXU MAC extension.}
+\label{tab:tflite_results}
+\end{table}
 
 \section{Yet Unimplemented Features and Downsides}
 

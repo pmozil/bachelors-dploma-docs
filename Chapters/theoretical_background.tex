@@ -1,6 +1,6 @@
 \chapter{Theoretical Background }
 
-In this chapter, we will look at the RISC-V ISA, analyze the main elements of developing 
+In this chapter, we will look at the RISC-V ISA, analyze the main elements of developing
 a CPU with SpinalHDL \cite{SpinalHDL2018} on the case of \textbf{VexiiRiscV},
 look at the litex ecosystem and framework,
 how custom extensions are ususally implemented, and how software is run on the SoCs produced with such
@@ -71,7 +71,7 @@ The framework automatically generates HDL, memory maps,  CSR definitions and sof
 
 \subsection{Memory-Mapped Architecture}
 
-Litex uses memory-mapped I/O.
+LiteX uses memory-mapped I/O.
 Peripherals are accessed by reading or writing specific addresses:
 
 \begin{verbatim}
@@ -92,13 +92,13 @@ Software interacts with hardware by manipulating these addresses.
         group/.style={draw, dashed, thick, fill=gray!5, rounded corners, inner sep=0.5cm}
         box/.style={rectangle, draw, rounded corners=3pt,
             minimum width=3.2cm, minimum height=0.75cm,
-            text centered, font=\small}, 
+            text centered, font=\small},
     ]
 
     \node[bus] (wishbone) {Wishbone Interconnect (32-bit)};
 
     \node[master, above=1.5cm of wishbone, xshift=-4cm] (cpu) {VexiiRiscv CPU \\ \small + CXU Plugin};
-    \node[master, above=1.5cm of wishbone, xshift=4cm, fill=orange!10] (dma) {LiteEth DMA \\ \small (Network Master)}; 
+    \node[master, above=1.5cm of wishbone, xshift=4cm, fill=orange!10] (dma) {LiteEth DMA \\ \small (Network Master)};
 
     \node[slave, below=1.5cm of wishbone, xshift=-6cm] (rom) {BootROM / \\ \small SPI Flash};
     \node[slave, below=1.5cm of wishbone, xshift=-3cm] (litedram) {LiteDRAM \\ \small (Main Memory)};
@@ -160,14 +160,14 @@ The resulting ELF binary is then loaded into on-chip memory
 \subsection{Linker Scripts}
 
 litex SoCs define a memory map that must be respected during linking.
-A linker script specifies instruction mrmory region, data memory region and stack and heap placement.
+A linker script specifies instruction memory region, data memory region and stack and heap placement.
 
 Correct linking ensures the program executes from valid memory
 and interacts properly with memory-mapped peripherals.
 
 \subsection{Bare-Metal vs Linux-Based Systems}
 
-The Litex platform supports bare-metal, RTOS-based and linux operating systems.
+The LiteX platform supports bare-metal, RTOS-based and linux operating systems.
 Bare-metal software directly accesses memory-mapped registers,
 while Linux- and RTOS-based systems require drivers and standard system calls.
 
@@ -177,8 +177,8 @@ while Linux- and RTOS-based systems require drivers and standard system calls.
 generate complete root filesystems, toolchains, and kernel images
 for embedded targets.
 
-Buildroot automatescross-toolchain generation, linux kernel config,
-rootfs and pakcage selection.
+Buildroot automates cross-toolchain generation, linux kernel config,
+rootfs and package selection.
 The workflow is as such: configuring the target,
 selecting the architecture,
 enabling desired packages and building the system complete image, while
@@ -217,13 +217,13 @@ enabling instruction-level acceleration with minimal software overhead.
     ]
         \node[block, fill=blue!10] (cpu) {VexiiRiscv CPU};
         \node[block, fill=green!10, right=4cm of cpu] (cxu) {CXU Accelerator};
-        
+
         \draw[arrow] ([yshift=1.5cm]cpu.east) -- node[above, font=\small] {rs1 (32-bit)} ([yshift=1.5cm]cxu.west);
         \draw[arrow] ([yshift=0.5cm]cpu.east) -- node[above, font=\small] {rs2 (32-bit)} ([yshift=0.5cm]cxu.west);
         \draw[arrow] ([yshift=-0.5cm]cpu.east) -- node[above, font=\small] {cxidx / opcode} ([yshift=-0.5cm]cxu.west);
-        
+
         \draw[arrow] ([yshift=-1.5cm]cxu.west) -- node[above, font=\small] {rd (32-bit)} ([yshift=-1.5cm]cpu.east);
-        
+
         \draw[arrow, dashed] ([yshift=2.2cm]cpu.east) -- node[above, font=\small\itshape] {Valid / Cmd Enable} ([yshift=2.2cm]cxu.west);
         \draw[arrow, dashed] ([yshift=-2.2cm]cxu.west) -- node[above, font=\small\itshape] {Ready / Pipeline Stall} ([yshift=-2.2cm]cpu.east);
     \end{tikzpicture}
@@ -297,7 +297,7 @@ the Linux kernel initializes drivers, memory management, and user-space services
         \node[box, fill=purple!20, below=of litex] (opensbi) {opensbi\\ \small machine mode environment setup};
         \node[box, fill=orange!20, below=of opensbi] (linux) {linux kernel\\ \small supervisor mode (mmu, dtb parsing)};
         \node[box, fill=cyan!20, below=of linux] (user) {buildroot user space\\ \small init scripts \& cxu applications};
-        
+
         \draw[->] (reset) -- (litex);
         \draw[->] (litex) -- (opensbi);
         \draw[->] (opensbi) -- (linux);
@@ -357,10 +357,10 @@ The transformation steps are as such:
         group/.style={draw, rectangle, dashed, thick, inner sep=0.4cm, fill=gray!10, rounded corners}
     ]
     \node[io] (plaintext) {Plaintext (128-bit)};
-    
+
     \node[box, below=1cm of plaintext] (init_addkey) {AddRoundKey};
     \node[keybox, right=of init_addkey] (key0) {Round Key 0};
-    
+
     \node[box, below=1.2cm of init_addkey] (subbytes) {SubBytes};
     \node[box, below=of subbytes] (shiftrows) {ShiftRows};
     \node[box, below=of shiftrows] (mixcols) {MixColumns};
@@ -375,29 +375,29 @@ The transformation steps are as such:
     \node[io, below=1cm of fin_addkey] (ciphertext) {Ciphertext (128-bit)};
 
     \begin{scope}[on background layer]
-        \node[group, fit=(subbytes) (shiftrows) (mixcols) (main_addkey), 
+        \node[group, fit=(subbytes) (shiftrows) (mixcols) (main_addkey),
               label=left:\rotatebox{90}{\textbf{9 Standard Rounds}}] (main_loop) {};
-              
-        \node[group, fit=(subbytes_f) (shiftrows_f) (fin_addkey), 
+
+        \node[group, fit=(subbytes_f) (shiftrows_f) (fin_addkey),
               label=left:\rotatebox{90}{\textbf{Final Round}}] (final_loop) {};
     \end{scope}
 
     \draw[arrow] (plaintext) -- (init_addkey);
     \draw[arrow] (key0) -- (init_addkey);
-    
+
     \draw[arrow] (init_addkey) -- (subbytes);
-    
+
     \draw[arrow] (subbytes) -- (shiftrows);
     \draw[arrow] (shiftrows) -- (mixcols);
     \draw[arrow] (mixcols) -- (main_addkey);
     \draw[arrow] (key1_9) -- (main_addkey);
 
-    \draw[arrow, rounded corners=5pt] (main_addkey.south) -- ++(0,-0.4) -| 
-          ([xshift=-1cm]main_loop.west) |- node[pos=0.25, left] {Loop 9x} 
+    \draw[arrow, rounded corners=5pt] (main_addkey.south) -- ++(0,-0.4) -|
+          ([xshift=-1cm]main_loop.west) |- node[pos=0.25, left] {Loop 9x}
           ([yshift=0.4cm]subbytes.north) -- (subbytes.north);
-    
+
     \draw[arrow] (main_addkey) -- (subbytes_f);
-    
+
     \draw[arrow] (subbytes_f) -- (shiftrows_f);
     \draw[arrow] (shiftrows_f) -- (fin_addkey);
     \draw[arrow] (key10) -- (fin_addkey);
@@ -437,7 +437,7 @@ $$
 
 AES could be sped up by having the arithmetic operations in $GF(2^8)$ be done by the extension.
 Instead of doing a loop of 5-6 iterations and doing 3-4 arithmetic operations in each iteration,
-an extension may be created to execute the arithmetic oepration in a finite field in a single CPU cycle.
+an extension may be created to execute the arithmetic operation in a finite field in a single CPU cycle.
 
 \section{GZIP}
 
@@ -659,4 +659,32 @@ instructions from the perspective of the processor pipeline.
 These instructions target frequently executed primitives in the
 DEFLATE decoding path and therefore provide opportunities for
 improving overall decompression throughput.
+
+\section{TensorFlow Lite Micro}
+
+TensorFlow Lite for Microcontrollers (TFLite Micro) is a framework designed
+to run machine learning models on microcontrollers and other devices with only
+kilobytes of memory. To optimize memory footprint and execution speed,
+models deployed via TFLite Micro are typically quantized,
+converting 32-bit floating-point weights and activations into 8-bit integers (INT8).
+
+\subsection{Multiply-Accumulate Operations}
+
+In the models, the most computationally expensive layers,
+such as Convolutional (Conv2D) and Fully Connected (Dense) layers,
+are executed as a series of dot products. The fundamental mathematical
+operation in a dot product is the Multiply-Accumulate (MAC) operation, defined as:
+
+$$
+acc = acc + (weight \times activation)
+$$
+
+In a standard RISC-V RV32IM implementation, performing a single MAC operation
+with 32-bit accumulation requires fetching the operands,
+performing a multiplication (e.g., \textbf{mul}), adding the result
+to an accumulator register (e.g., \textbf{add}), and handling loop
+overhead and memory loads. By introducing a custom hardware instruction
+that combines multiplication and accumulation into a single computational step,
+the instruction footprint and pipeline hazards within the inner
+loop of the neural network kernel can be drastically minimized.
 

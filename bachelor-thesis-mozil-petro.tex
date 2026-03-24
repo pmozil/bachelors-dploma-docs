@@ -61,6 +61,9 @@ headsepline, % Uncomment to get a line under the header
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
+\usepackage{pgfplotstable}
+\usepackage{booktabs}
+
 %----------------------------------------------------------------------------------------
 %    MARGIN SETTINGS
 %----------------------------------------------------------------------------------------
@@ -241,33 +244,33 @@ The acknowledgments and the people to thank go here, don't forget to include you
 \end{abbreviations}
 
 %----------------------------------------------------------------------------------------
-%    PHYSICAL CONSTANTS/OTHER DEFINITIONS
+%    PHYSICAL CONSTANTS/OTHER DEFINITIONS (Not used, commenting this out)
 %----------------------------------------------------------------------------------------
 
-\begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
+% \begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
 
 % The \SI{}{} command is provided by the siunitx package, see its documentation for instructions on how to use it
 
-Speed of Light & $c_{0}$ & \SI{2.99792458e8}{\meter\per\second} (exact)\\
+% Speed of Light & $c_{0}$ & \SI{2.99792458e8}{\meter\per\second} (exact)\\
 %Constant Name & $Symbol$ & $Constant Value$ with units\\
 
-\end{constants}
+% \end{constants}
 
 %----------------------------------------------------------------------------------------
-%    SYMBOLS
+%    SYMBOLS (Also not used, commenting this out)
 %----------------------------------------------------------------------------------------
 
-\begin{symbols}{lll} % Include a list of Symbols (a three column table)
-
-$a$ & distance & \si{\meter} \\
-$P$ & power & \si{\watt} (\si{\joule\per\second}) \\
+% \begin{symbols}{lll} % Include a list of Symbols (a three column table)
+%
+% $a$ & distance & \si{\meter} \\
+% $P$ & power & \si{\watt} (\si{\joule\per\second}) \\
 %Symbol & Name & Unit \\
 
-\addlinespace % Gap to separate the Roman symbols from the Greek
+% \addlinespace % Gap to separate the Roman symbols from the Greek
 
-$\omega$ & angular frequency & \si{\radian} \\
+% $\omega$ & angular frequency & \si{\radian} \\
 
-\end{symbols}
+% \end{symbols}
 
 %----------------------------------------------------------------------------------------
 %    DEDICATION

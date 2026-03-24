@@ -39,7 +39,7 @@ coprocessors within an embedded system.
 The proposed sandbox is built upon the litex framework.
 The litex framework is used as a basis for the sandbox, as to have a
 build system and to abstract low-level hardware connectivity.
-Litex enables the automated generation of the FPGA-based SoC
+LiteX enables the automated generation of the FPGA-based SoC
 by connecting the central CPU core with essential peripherals,
 such as UART and Ethernet, and external memory controllers like LiteDRAM.
 Communication between these modules is handled by the Wishbone bus,
@@ -54,17 +54,18 @@ of custom execution units.
 The entire playground is available as a single repository \cite{CXUPlayground}.
 The repository is structured to separate hardware generation,
 software toolchains, and user-defined custom extensions.
-It provides scripts for automating the Litex SoC build process,
+It provides scripts for automating the LiteX SoC build process,
 templates for writing SpinalHDL custom extensions,
 and a structured environment for compiling software applications
 that utilize the custom instructions.
+
 \section{CXU Integration in VexiiRiscv}
 
 To provide low-latency instruction-level acceleration,
 the CXU mechanism is integrated as a tightly coupled accelerator
 directly within the CPU pipeline.
 Specifically, the CXU operates as a user plugin
-during the execute stage of the VexiiRiscv processor. 
+during the execute stage of the VexiiRiscv processor.
 
 Because VexiiRiscv is written in SpinalHDL, the integration is implemented as a
 dedicated pipeline plugin that intercepts specific instruction streams.
@@ -97,20 +98,20 @@ The data flow integration is designed as such:
     \node[stage, right=of decode] (execute) {Execute};
     \node[stage, right=of execute] (memory) {Memory};
     \node[stage, right=of memory] (writeback) {Writeback};
-    
+
     \node[cxu, below=1.5cm of execute] (cxu_unit) {CXU Plugin \\ \small (Custom Accelerator)};
-    
+
     \draw[arrow] (fetch) -- (decode);
     \draw[arrow] (decode) -- (execute);
     \draw[arrow] (execute) -- (memory);
     \draw[arrow] (memory) -- (writeback);
-    
+
     \draw[arrow] (decode.south) -- ++(0,-0.25) -| node[pos=0.75, left, font=\small] {Opcode Map} ([xshift=-1cm]cxu_unit.north);
     \draw[arrow] ([xshift=-0.4cm]execute.south) -- node[pos=0.5, above, font=\small] {rs1, rs2} ([xshift=-0.4cm]cxu_unit.north);
     \draw[arrow] ([xshift=0.4cm]cxu_unit.north) -- node[right, font=\small] {rd} ([xshift=0.4cm]execute.south);
-    
+
     \draw[signal] (cxu_unit.east) -| node[pos=0.75, right, font=\small, text=black] {Halt / Pipeline Stall} (memory.south);
-    
+
     \end{tikzpicture}
     \caption{Integration of the CXU as a tightly coupled plugin within the VexiiRiscv pipeline}
 \end{figure}
@@ -120,14 +121,14 @@ The data flow integration is designed as such:
 The core contribution of this work is the unified sandbox
 that allows users to seamlessly design, test, and benchmark CXU hardware.
 Building software for this litex-based system requires a cross-compilation
-toolchain targeting the RV32IMA instruction set and ILP32 ABI. 
+toolchain targeting the RV32IMA instruction set and ILP32 ABI.
 
 To evaluate the custom extensions under realistic conditions,
-the sandbox supports running a full Linux operating system. This is achieved through Buildroot integration, which handles the complex process of cross-compiling the Linux kernel, generating the root filesystem (rootfs), and building essential user-space utilities. 
+the sandbox supports running a full Linux operating system. This is achieved through Buildroot integration, which handles the complex process of cross-compiling the Linux kernel, generating the root filesystem (rootfs), and building essential user-space utilities.
 
 Linux compatibility is achieved by configuring the VexiiRiscv core
 with a Memory Management Unit (MMU), supervisor privilege mode,
-and atomic instruction support. 
+and atomic instruction support.
 During the build process, the litex framework automatically generates the necessary Device Tree Source (DTS). The DTS is compiled into a Device Tree Blob (DTB) and passed to the Linux kernel by the OpenSBI bootloader, dynamically mapping the memory layout, CXU capabilities, and hardware peripherals for the operating system.
 
 \begin{figure}[htb]
@@ -148,23 +149,23 @@ During the build process, the litex framework automatically generates the necess
     \node[box, os, above=0cm of firmware] (linux) {Operating System: Linux Kernel (MMU enabled)};
     \node[box, rt, above=0cm of linux] (runtime) {CXU Runtime ABI \& C-level Library};
     \node[box, usr, above=0cm of runtime] (apps) {User Space Applications (AES, GZIP Benchmarks)};
-    
+
     \node[left=0.8cm of hardware, align=right, font=\itshape] {Kernel Mode};
     \node[left=0.8cm of runtime, align=right, font=\itshape] {User Mode};
-    
+
     \end{tikzpicture}
     \caption{The CXU Sandbox full-system stack}
 \end{figure}
 
 \section{The CXU Runtime}
 
-A critical component of bringing CXU extensions to an operating system environment is the CXU runtime software interface. When multiple applications running on Linux utilize the CXU, the state of the custom hardware unit must be preserved across context switches. 
+A critical component of bringing CXU extensions to an operating system environment is the CXU runtime software interface. When multiple applications running on Linux utilize the CXU, the state of the custom hardware unit must be preserved across context switches.
 
 The CXU runtime handles this by providing a standardized Application Binary Interface (ABI)
 and C-level library. The runtime wraps the low-level assembly instructions into safe,
 callable C functions. It manages the \textbf{cxidx}
 register to securely multiplex access to different hardware extensions
-among various software threads. 
+among various software threads.
 
 Though the specification states that the Linux kernel's context switching process
 must ensure that the CXU state is saved and restored alongside standard CPU registers,
@@ -174,7 +175,7 @@ the work itself has not yet implemented this.
 
 To validate the effectiveness and flexibility of the CXU sandbox,
 the framework will host and benchmark complex cryptographic
-and data compression algorithms. 
+and data compression algorithms.
 
 \begin{itemize}
     \item \textbf{AES Encryption Optimization:} Advanced Encryption Standard workloads
@@ -183,7 +184,7 @@ and data compression algorithms.
     Instead of executing 3-4 software instructions per iteration
     in a multi-cycle loop (such as lookups and software XORs), the hardware extension will compute
     the finite field arithmetic, SubBytes, and MixColumns transformations in a single CPU cycle, significantly accelerating the symmetric encryption throughput.
-    
+
     \item \textbf{GZIP Compression Optimization:} The DEFLATE algorithm relies heavily
     on pattern detection and entropy encoding.
     The sandbox will be tested by implementing custom instructions
@@ -206,8 +207,8 @@ The testing strategy is twofold:
     Verilator-based testbench to ensure logical correctness before synthesis.
     Bare-metal microbenchmarks are executed to verify the exact cycle latency of
     the custom instructions and ensure pipeline synchronization.
-    
-    \item \textbf{System-Level Benchmarking:} After beins synthesizes on the FPGA,
+
+    \item \textbf{System-Level Benchmarking:} After being synthesized on the FPGA,
     benchmarks are also executed within the Buildroot Linux environment.
     The workloads are timed using hardware performance counters and standard
     Linux profiling tools to compare the execution time of pure software implementations against
@@ -221,7 +222,7 @@ phases: the implementation of the CXU interface itself,
 and the implementation of concrete hardware extensions used as experimental subjects.
 
 The first part is implementing the CXU extension mechanism within
-the VexiiRiscv pipeline. This required implenenting a
+the VexiiRiscv pipeline. This required implementing a
 dedicated SpinalHDL plugin that intercepts
 custom-opcode instructions during the execute stage,
 routes operands from registers \textbf{rs1} and \textbf{rs2} to the coprocessor,
@@ -239,7 +240,7 @@ field arithmetic in $\text{GF}(2^8)$, specifically the \textbf{SubBytes} and
 multi-instruction software loops with a single custom instruction per
 operation. Second is the GZIP extension. There are multiple versions of these
 extensions, one for a basic arithmetic optimization, and one for the full
-GZIP decompresison extension.
+GZIP decompression extension.
 
 For each extension, a paired set of benchmarks was developed: a pure
 software reference implementation written in C and a CXU-accelerated
@@ -270,7 +271,7 @@ utility of certain CXU features and must be taken into account when
 interpreting the benchmarking results.
 
 The first and most significant limitation concerns the shared-state mechanism
-provided by the \textbf{cxidx} and \textbf{cxdata} CSRs.In the CXU
+provided by the \textbf{cxidx} and \textbf{cxdata} CSRs. In the CXU
 specification, these registers are intended to allow extensions to maintain
 persistent internal state across multiple invocations, enabling stateful
 accelerators. However, in the LiteX SoC implementation, CSR access

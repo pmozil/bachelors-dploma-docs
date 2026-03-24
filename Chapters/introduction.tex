@@ -3,14 +3,14 @@
 \section{Motivation}
 
 RISC-V \cite{RISC-VInternational2025} is a modern and extensible instruction set architecture often used in systems-on-chip,
-especially, FPGA-based ones \cite{LiteXGitHub}, such that it is both extensible and energy-efficient. 
+especially, FPGA-based ones \cite{LiteXGitHub}, such that it is both extensible and energy-efficient.
 RISC-V's instruction set architecture is designed with custom extensions in mind,
 so designing custom extensions would be a straightforward process.
 It is, however, a difficult task to integrate a custom extension into the RISC-V specification,
 and even more so to implement an extension for the multitude of RISC-V processor implementations.
 With such issues, and the fact that most FPGA-bases SOCs offer plenty
 of space to also implement an extension,
-in mind, Jan Gray et. al. designed the custom composable extensions (CFU) \cite{Gray2022CFU} extension.
+in mind, Jan Gray et al. designed the custom composable extensions (CFU) \cite{Gray2022CFU} extension.
 It allows for an implementation of a specific extension to be used across multiple RISC-V CPUs,
 so as to use the single extension implementation across a multitude of different RISC-V CPUs.
 CFU allows for a single extension to be connected to a hardware thread.
@@ -23,7 +23,7 @@ CFU is a useful interface for implementing a single extension,
 but when combining extensions, especially those,
 that may have multiple different functions and utilize the function id, it becomes incredibly
 difficult and cumbersome to switch between them.
-Because of that, Gray et. al. also designed a newer version of composable
+Because of that, Gray et al. also designed a newer version of composable
 custom extensions - the CXU \cite{Gray2025CXU}.
 This implementation allows for switching between multiple custom extensions,
 but, as of now, there is not yet an implementation of it
@@ -38,7 +38,7 @@ to simplify creating projects that utilize custom CXU compute units.
 The contribution of this work is the sandbox that gives the user the ability
 to implement custom extensions, as well as test and benchmark them.
 
-To validate the effectiveness of the CXU sandbox, the research includes 
+To validate the effectiveness of the CXU sandbox, the research includes
 the implementation and benchmarking of practical example extensions such as AES and GZIP.
 The AES extension serves as a primary case study for accelerating cryptographic workloads,
 demonstrating how modular hardware can achieve substantial runtime improvements

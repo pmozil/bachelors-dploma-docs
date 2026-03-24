@@ -7,30 +7,30 @@ and works that explore other ways of managing multiple extensions for RISC-V-bas
 \section{RISC-V Extensions For Custom Instruction Integration}
 
 In this section, we provide an overview of what the composable
-custom extensions specification is and what it 
+custom extensions specification is and what it may be used for.
 
 \subsection{CFU}
 
 Composable Custom Extensions \cite{Gray2022CFU, Gray2025CXU, Gray2025CXUGithub} is a
-RISC-V extension proposed by Jan Gray et. al. It's an extension aimed at making custom
+RISC-V extension proposed by Jan Gray et al. It's an extension aimed at making custom
 extensions modular and usable between different implementations of RISC-V CPUs.
 The motivation behind the composable custom extensions is that many RISC-V CPUs
 use some sort of custom extensions, yet there is no cross-implementation interoperability,
 and so there is many implementations of a single extension (e. g. SIMD multiply-accumulate)
 across multiple RISC-V CPU implementations. One solution to that is to provide a common logic
-interface to connect extensions to, and that is exactly the Composable Custom Extensions RISC-V 
+interface to connect extensions to, and that is exactly the Composable Custom Extensions RISC-V
 ISA extension.
 
 The first version of composable custom extensions if the Custom Function Unit (CFU).
-It was proposed in 2020 by Jan Gray et. al. and provides an interface to connect custom
-extensions to along with timing, logic and combinatorial constraints for what an extension 
-may do \cite{Gray2022CFU}. 
+It was proposed in 2020 by Jan Gray et al. and provides an interface to connect custom
+extensions to along with timing, logic and combinatorial constraints for what an extension
+may do \cite{Gray2022CFU}.
 We will go over what constitutes a composable extension in the theoretical background chapter.
 
-The CFU allows for a single extension to be used with a CPU, 
+The CFU allows for a single extension to be used with a CPU,
 and it requires the user to invoke a \textbf{custom-0|1|2|3} instruction,
 even when not using assembly, such that when using a higher-level language,
-the user would still need to invoke an assembly instruction. 
+the user would still need to invoke an assembly instruction.
 The CFU also may not access memory. \cite{Gray2022CFU}
 
 \subsection{CXU}
@@ -40,8 +40,8 @@ It allows for up to $2^{\textbf{XLEN}}$ custom extensions.
 It also allows for extensions to have a shared state and defines the limitations under which an extension may have access to memory. \cite{Gray2025CXU}
 
 Notably, the CXU specification also defines the ABI, making it possible to call the extension from a higher-level language without invoking the assembly instruction directly.
-An example of a CXU runtime is also provided, such that calls to the CXU extenisons
-would be wrapped in helper fucntions that select a proper extension, save the previous state
+An example of a CXU runtime is also provided, such that calls to the CXU extensions
+would be wrapped in helper functions that select a proper extension, save the previous state
 and clean up the context afterwards.
 The specification was developed with support for operating systems in mind, and it
 specifies how the OS and process context switching is to be done with respect to the CXU
@@ -54,7 +54,7 @@ RISC-V extension interface for implementing custom ISA extensions and coprocesso
 As composable custom extensions, it's an interface that allows for custom extensions to be
 integrated into any CPU that supports the Core-V-XIF interface.
 
-Unlike composable custom extensions, Core-V-XIF allows for custom CSRs and overall is less 
+Unlike composable custom extensions, Core-V-XIF allows for custom CSRs and overall is less
 restrictive. Like the CFU Playgroud \cite{CFUPlayground2022}, there is an implementation of a
 sandbox for custom extensions, Francis-V \cite{Egert2023FRANCISV}.
 However, it's more tightly coupled to a certain CPU implementation, and would not allow
@@ -62,13 +62,13 @@ for straightforward interoperability of implemented extensions.
 
 \section{Frameworks for FPGA-based SOC development}
 
-In this section, we provide an overview for frameworks that provide a base for developing 
+In this section, we provide an overview for frameworks that provide a base for developing
 FPGA-based SOCs. These frameworks usually provide a way to extend the SOC
 with additional functionality, be it an ISA extension or an IO device, e. g.
 a specialized USB port for debugging.
 The frameworks usually consist of modules, which are then assembled into a bigger system.
 
-\subsection{Litex}
+\subsection{LiteX}
 
 \textbf{LiteX} \cite{LiteXGitHub} is an open-source python-based framework for building
 FPGA-based SoCs. It provides modules for the bus, IO and CPU integration
@@ -114,9 +114,9 @@ and pipeline extensions, making it highly relevant for composable extension rese
 SpinalHDL is used in the \textbf{VexiiRISCV} \cite{VexiiRiscVGithub} implementation, and we use
 VexiiRISCV as our CPU.
 
-\section{Sanboxes for simplified development of custom instruction hardware}
+\section{Sandboxes for simplified development of custom instruction hardware}
 
-\subsection{FRAVCIS-V}
+\subsection{FRANCIS-V}
 
 \textbf{FRANCIS-V}\cite{Egert2023FRANCISV}
 (FRAmework for iNtegrating Custom InstructionS into RISC‑V systems) \cite{Egert2023FRANCISV} is a
@@ -167,7 +167,7 @@ much like the \textbf{CFU playground} and allows for customized RISC-V processor
 \end{figure}
 
 \subsection{CFU Playground}
-The CFU Playground \cite{CFUPlayground2022} is an environment for development of custom 
+The CFU Playground \cite{CFUPlayground2022} is an environment for development of custom
 compute units on a litex SoC.
 
 The CFU Playground \cite{CFUPlayground2022} is a full-stack open-source playground designed
@@ -176,7 +176,7 @@ to accelerate FPGA-based RISC-V soft CPUs.
 
 Originally proposed for Tiny Machine Learning (tinyML) acceleration,
 it utilizes the LiteX framework as its architectural base to provide a ready-made SoC environment
-\cite{LiteXGitHub}. The playground allows users to implement specialized hardware logic and 
+\cite{LiteXGitHub}. The playground allows users to implement specialized hardware logic and
 write software scripts to invoke these extensions.
 
 The architecture is based on the initial version of the Composable Custom Extension specification,
@@ -223,7 +223,7 @@ These restrictions eventually led to the development of the more flexible CXU sp
 \section{Applications of Custom Instruction Extensions in Cryptography and Systems}
 
 The purpose of CFU, FRANCIS-V and CXU is to provide a straightforward interface to create and
-wotk with custom extensions. This section is an overwiew of the applications of custom extensions,
+work with custom extensions. This section is an overview of the applications of custom extensions,
 as well as some reflections on how these extensions may be used.
 
 These works illustrate practical motivations for custom instruction
@@ -326,7 +326,7 @@ intermediate data movement and reducing pipeline stalls.
 
 The work \cite{Oliveira2022MiniFloat} proposes MiniFloat-NN and ExSdotp,
 modular RISC-V instruction set extensions targeting low-precision neural network training and inference.
-The design introduces float8 arithmetic support and specialized dot-product accumulation instructions, 
+The design introduces float8 arithmetic support and specialized dot-product accumulation instructions,
 enabling efficient execution of quantized neural network workloads.
 
 The extensions are structured to allow integration through coprocessor-style interfaces,
@@ -334,6 +334,21 @@ aligning with custom extension (CXU) paradigms. Experimental results indicate
 improved energy efficiency and computational density for low-precision workloads,
 demonstrating the flexibility of RISC-V in accommodating emerging AI-centric computation models.
 
+\subsection{Hardware Acceleration for Edge Machine Learning}
+
+The deployment of deep learning models on resource-constrained microcontrollers,
+often referred to as Edge AI or TinyML, heavily relies on the optimization of underlying arithmetic operations.
+Neural network inference is dominated by matrix multiplication,
+which at its core consists of repeated Multiply-Accumulate (MAC) operations.
+
+Frameworks like TensorFlow Lite for Microcontrollers (TFLite Micro) \cite{David2021TFLiteMicro}
+provide reference software implementations for these operations. However, purely software-based execution
+on embedded processors often fails to meet strict latency and power constraints.
+To address this, various works have proposed ISA extensions and co-processors.
+For example, the CMSIS-NN library \cite{Lai2018CMSISNN} leverages ARM DSP extensions (like SIMD MAC instructions)
+to accelerate neural network primitives, achieving up to a 4.6x performance improvement over baseline implementations.
+
+Similarly, the PULP (Parallel Ultra-Low-Power) platform \cite{PULP2015} incorporates custom RISC-V DSP extensions, including hardware loops and dot-product instructions, to accelerate convolutional and fully connected layers. These approaches demonstrate that introducing specialized MAC instructions directly into the CPU pipeline can significantly reduce the cycle count for machine learning workloads without the overhead of offloading data to a heavy external accelerator.
 
 \subsection{Linux on LiteX VexRiscV}
 
