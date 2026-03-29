@@ -2,7 +2,7 @@
 
 In this chapter, we will look at the RISC-V ISA, analyze the main elements of developing
 a CPU with SpinalHDL \cite{SpinalHDL2018} on the case of \textbf{VexiiRiscV},
-look at the litex ecosystem and framework,
+look at the LiteX ecosystem and framework,
 how custom extensions are ususally implemented, and how software is run on the SoCs produced with such
 methods.
 
@@ -53,15 +53,15 @@ and custom execution units—are implemented as independent plugins.
 The CXU extension is an execute extension. All computation done by CXU coprocessors is done
 in the execution step of \textbf{VexiiRiscv}.
 
-\section{The litex SoC Ecosystem}
+\section{The LiteX SoC Ecosystem}
 
-\subsection{litex Framework Overview}
+\subsection{LiteX Framework Overview}
 
-litex \cite{LiteXGitHub} is a python-based SoC construction framework built on top of Migen \cite{MiSoC2014}.
+LiteX \cite{LiteXGitHub} is a python-based SoC construction framework built on top of Migen \cite{MiSoC2014}.
 It enables automated generation of FPGA-based SoCs by integrating CPU cores,
 memory controllers, interconnects, and peripherals into a cohesive hardware platform.
 
-Within this ecosystem, litex acts as the integration layer between the VexiiRiscv CPU
+Within this ecosystem, LiteX acts as the integration layer between the VexiiRiscv CPU
 core and FPGA peripherals such as UART, Ethernet \cite{LiteEthGithub}, timers \cite{LiteXGitHub},
 and external memory controllers \cite{LiteDramGithub, LitePcieGithub}.
 The framework abstracts low-level hardware connectivity and provides a unified build
@@ -121,7 +121,7 @@ Software interacts with hardware by manipulating these addresses.
 
 \subsection{Interconnect and Control}
 
-litex commonly uses the Wishbone bus as its on-chip interconnect standard.
+LiteX commonly uses the Wishbone bus as its on-chip interconnect standard.
 Wishbone is a simple and flexible synchronous bus protocol that supports
 master-slave communication between cores and peripherals.
 It enables memory-mapped I/O and simplifies peripheral integration. \cite{LiteXGitHub}
@@ -133,7 +133,7 @@ This abstraction is essential for interacting with accelerators and managing run
 
 \subsection{Memory Management}
 
-litex integrates external memory controllers through LiteDRAM \cite{LiteDramGithub},
+LiteX integrates external memory controllers through LiteDRAM \cite{LiteDramGithub},
 which provides support for SDRAM and DDR memory devices.
 LiteDRAM abstracts memory timing, initialization, and refresh management,
 exposing a consistent interface to the system bus.
@@ -143,11 +143,11 @@ Proper memory layout is particularly important for Linux-based systems,
 where kernel placement, device tree configuration,
 and bootloader operation depend on predictable address organization.
 
-\section{Software Development for litex-Based SoCs}
+\section{Software Development for LiteX-Based SoCs}
 
-Developing software for a \textbf{litex}-based SoC requires
+Developing software for a \textbf{LiteX}-based SoC requires
 cross-compilation and careful linking against the target memory map.
-Since litex systems typically use RISC-V softcores (e.g., VexRiscv),
+Since LiteX systems typically use RISC-V softcores (e.g., VexRiscv),
 programs must be compiled for the appropriate architecture. \cite{LiteXGitHub}
 
 \subsection{Cross-Compilation}
@@ -159,7 +159,7 @@ The resulting ELF binary is then loaded into on-chip memory
 
 \subsection{Linker Scripts}
 
-litex SoCs define a memory map that must be respected during linking.
+LiteX SoCs define a memory map that must be respected during linking.
 A linker script specifies instruction memory region, data memory region and stack and heap placement.
 
 Correct linking ensures the program executes from valid memory
@@ -184,7 +184,7 @@ selecting the architecture,
 enabling desired packages and building the system complete image, while
 the output typically includes the kernel image, DTB and the filesystem image.
 
-Buildroot is commonly used with litex SoCs to produce
+Buildroot is commonly used with LiteX SoCs to produce
 bootable Linux images for FPGA-based systems. It's used with \cite{CXUPlayground}.
 
 \section{Custom Extension Units (CXU) Mechanism}
@@ -253,14 +253,14 @@ command to the CXU coprocessor.
         \item The result is written back to the destination register $rd$.
         \item Updated CXU state may be read from through the use of $cxidx$ and $cxdata$ CSRs.
     \end{enumerate}
-    \caption{VexiiRiscv data flow}
+    \caption{VexiiRiscv CXU operation diagram.}
 \end{figure}
 
 Multi-cycle CXU operations require pipeline stall mechanisms
 to preserve correctness. The plugin must signal readiness and manage structural,
 data, and control hazards to ensure correct execution ordering.
 
-\section{Linux Support on litex}
+\section{Linux Support on LiteX}
 
 \subsection{Hardware Requirements}
 
@@ -270,7 +270,7 @@ atomic instruction support (RV32A/RV64A) for synchronization primitives and
 a supervisor privilege mode.
 
 These features are enabled through appropriate VexiiRiscv plugins
-and litex SoC configuration parameters.
+and LiteX SoC configuration parameters.
 
 \subsection{The Boot Process}
 
@@ -293,23 +293,23 @@ the Linux kernel initializes drivers, memory management, and user-space services
             text centered, font=\small}
     ]
         \node[box, fill=gray!20] (reset) {hardware reset};
-        \node[box, fill=blue!20, below=of reset] (litex) {litex bios (bootrom)\\ \small hardware init \& memory training};
-        \node[box, fill=purple!20, below=of litex] (opensbi) {opensbi\\ \small machine mode environment setup};
+        \node[box, fill=blue!20, below=of reset] (LiteX) {LiteX bios (bootrom)\\ \small hardware init \& memory training};
+        \node[box, fill=purple!20, below=of LiteX] (opensbi) {opensbi\\ \small machine mode environment setup};
         \node[box, fill=orange!20, below=of opensbi] (linux) {linux kernel\\ \small supervisor mode (mmu, dtb parsing)};
         \node[box, fill=cyan!20, below=of linux] (user) {buildroot user space\\ \small init scripts \& cxu applications};
 
-        \draw[->] (reset) -- (litex);
-        \draw[->] (litex) -- (opensbi);
+        \draw[->] (reset) -- (LiteX);
+        \draw[->] (LiteX) -- (opensbi);
         \draw[->] (opensbi) -- (linux);
         \draw[->] (linux) -- (user);
     \end{tikzpicture}
-    \caption{the litex soc linux boot process}
+    \caption{the LiteX soc linux boot process}
 \end{figure}
 
 \subsection{Device Tree Overlay (DTS)}
 
 The device tree describes the hardware layout to the Linux kernel \cite{DeviceTreeDoc}.
-litex generates a hardware description that is translated into a Device Tree Source (DTS) file.
+LiteX generates a hardware description that is translated into a Device Tree Source (DTS) file.
 This file specifies CPU configuration, memory regions, peripheral addresses,
 and interrupt mappings. The kernel uses this information to configure drivers
 and manage hardware resources dynamically.

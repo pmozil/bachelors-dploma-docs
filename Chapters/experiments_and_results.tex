@@ -152,7 +152,7 @@ The results demonstrate a drastic reduction in total cycles.
 \end{table}
 
 As shown in the tables, the hardware acceleration achieved a
-significant speedup factor. This is attributed to the elimination of compute-heavy
+speedup of approximately 5 times. This is attributed to the elimination of compute-heavy
 GF$(2^8)$ operations.
 
 \subsection{GZIP extension and software implementation}
@@ -209,11 +209,11 @@ The data in the plot indicates that while the overall speedup is less
 dramatic than AES (due to the I/O overhead in Linux),
 the CPU utilization for bit-stream packing decreased by approximately 10\%.
 
-\subsection{Tensorflow MAC extension}
+\subsection{TensorFlow MAC extension}
 
 Only a placeholder table right here for now.
 
-\begin{table}[h]
+\begin{table}[htb]
 \centering
 \begin{tabular}{|l|c|c|}
 \hline
@@ -225,22 +225,31 @@ CXU MAC Extension & CXUTIME & SPEEDUPx \\ \hline
 \label{tab:tflite_results}
 \end{table}
 
-\section{Yet Unimplemented Features and Downsides}
+\section{Unimplemented Features and Known Limitations}
 
-\subsection{Locating the CXU extensions with the Linux Device Tree}
-Currently, the Linux kernel is unaware of the specific CXU capabilities at boot time.
-The extension addresses are hardcoded into the runtime library.
-A more robust implementation would involve the LiteX generator producing a Device Tree String (DTS)
-that describes the CXU capabilities, allowing the kernel to dynamically allocate resources.
+\subsection{CXU Capabilities in the Linux Device Tree}
 
-\subsection{Speed Limitations of the LiteX SoC}
-The system's frequency is currently limited by the interconnect fabric of the
-LiteX SoC when implemented on entry-level FPGA boards.
-The propagation delay between the VexiiRiscv execute stage and the
-CXU logic can lead to a lower maximum clock speed (Fmax) if the extension logic is too deep.
+The Linux kernel currently has no visibility into the available CXU extensions at
+boot time. Extension base addresses are hard-coded into the runtime library rather
+than discovered dynamically. A more robust implementation would extend the LiteX
+SoC generator to emit DTS nodes describing the CXU capabilities (index range,
+operand widths, and memory-access permissions), allowing the kernel to allocate
+resources and expose extensions through a standard device interface.
 
-\subsection{Linux CXU Driver and Interface}
-The current interface between the user-space applications and the CXU hardware involves
-a light-weight UIO (Userspace I/O) driver. While functional, it introduces a small
-context-switch overhead. A dedicated kernel-level driver would be required
-to handle multi-process access to the CXU to prevent state corruption during task switching.
+\subsection{Clock Frequency Limitations}
+
+The maximum clock frequency of the SoC is constrained by the critical path through
+the Wishbone interconnect and the CXU combinational logic when targeting
+entry-level FPGA boards. Deep combinational extensions can lower the synthesis
+Fmax, requiring either pipeline registers inside the CXU or a lower system clock.
+This trade-off should be characterised per extension as part of the development
+workflow.
+
+\subsection{Multi-Process CXU Access and Kernel Driver}
+
+The current userspace interface relies on a lightweight UIO (Userspace I/O) driver,
+which provides no protection against concurrent access from multiple processes and
+does not save or restore CXU state during context switches. A proper kernel-level
+driver is required to handle mutual exclusion and to integrate CXU state
+save/restore into the task-switch path. Without this, running CXU-accelerated
+applications in a preemptive multi-process workload risks state corruption.

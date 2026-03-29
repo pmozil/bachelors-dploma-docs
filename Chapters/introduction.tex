@@ -8,7 +8,7 @@ RISC-V's instruction set architecture is designed with custom extensions in mind
 so designing custom extensions would be a straightforward process.
 It is, however, a difficult task to integrate a custom extension into the RISC-V specification,
 and even more so to implement an extension for the multitude of RISC-V processor implementations.
-With such issues, and the fact that most FPGA-bases SOCs offer plenty
+With such issues, and the fact that most FPGA-based SOCs offer plenty
 of space to also implement an extension,
 in mind, Jan Gray et al. designed the custom composable extensions (CFU) \cite{Gray2022CFU} extension.
 It allows for an implementation of a specific extension to be used across multiple RISC-V CPUs,
@@ -16,7 +16,7 @@ so as to use the single extension implementation across a multitude of different
 CFU allows for a single extension to be connected to a hardware thread.
 It also allows passing a "function index" to an extension, such that up to 255 different functions may be implemented.
 
-There is also a playground for desigining the CFU extensions on a ready-made SOC called
+There is also a playground for desgining the CFU extensions on a ready-made SOC called
 the CFU playground. It allows the users to implement a
 CFU and write a main script that runs and invokes the implemented extension.
 CFU is a useful interface for implementing a single extension,
@@ -31,31 +31,57 @@ on any of the RISC-V implementations, nor an environment for developing custom e
 
 \section{Contributions}
 
-The goal of this work is to implement the CXU RISC-V extension for the Vexii
-RISC-V Processor and then to set up a development environment, or sandbox,
-to simplify creating projects that utilize custom CXU compute units.
+This thesis makes the following concrete contributions:
 
-The contribution of this work is the sandbox that gives the user the ability
-to implement custom extensions, as well as test and benchmark them.
+\begin{itemize}
+    \item \textbf{First CXU implementation:} A SpinalHDL plugin for the
+    VexiiRiscv processor that realises the CXU interface, including opcode
+    interception at the execute stage, pipeline stall management for multi-cycle
+    operations, and \texttt{cxidx}/\texttt{cxdata} CSR support.
 
-To validate the effectiveness of the CXU sandbox, the research includes
-the implementation and benchmarking of practical example extensions such as AES and GZIP.
-The AES extension serves as a primary case study for accelerating cryptographic workloads,
-demonstrating how modular hardware can achieve substantial runtime improvements
-compared to software-only reference algorithms.
+    \item \textbf{CXU Playground:} A unified, open-source sandbox built on LiteX
+    that automates SoC generation, Buildroot Linux integration, cross-compilation,
+    and CXU hardware templating, enabling developers to prototype and benchmark
+    custom extensions under realistic, OS-level conditions.
 
-These examples collectively serve as proof of concept for the sandbox’s ability to
-host diverse compute units. The results show that even complex algorithms
-can be integrated and benchmarked efficiently, providing measurable gains
-in instruction efficiency and overall cycle counts within a unified development environment.
+    \item \textbf{C-level CXU runtime library:} A header-only library that wraps
+    the low-level assembly invocation, manages extension multiplexing via the
+    \texttt{cxidx} register, and provides a portable C API for CXU-accelerated
+    routines.
 
+    \item \textbf{Three case-study extensions:} An AES GF$(2^8)$ accelerator, a
+    GZIP/DEFLATE bit-manipulation accelerator, and a multiply-accumulate (MAC)
+    extension for TensorFlow Lite Micro inference, each accompanied by a paired
+    software reference implementation and benchmarking suite.
+\end{itemize}
+
+Benchmarking results demonstrate approximately a 5.25$\times$ reduction in cycles
+per byte for AES encryption and a roughly 10\% reduction in CPU time for GZIP
+bit-stream manipulation, confirming that even a small number of tightly coupled
+custom instructions can yield substantial gains for arithmetic-intensive workloads.
 
 \section{Structure Of The Thesis}
 
 \begin{itemize}
-    \item Chapter 2 surveys existing implementations of similar custom extensions sandboxes and custom instruction interfaces, as well as works that utilize those extensions to achieve some compute advantages.
-    \item Chapter 3 provides the theoretical background for how custom SoC frameworks, the Vexii RISC-V and CXU work.
-    \item Chapter 4 formulates the goals of this work in more detail and describes the methodology used in the thesis. This chapter covers how the CXU extension is implemented for Vexii RISC-V, how it's integrated into litex, the sandbox environment, example extensions and testing / benchmarking methodology used for this thesis.
-    \item Chapter 5 covers the results of the implementation of the sandbox and the example extensions, tests for the CXU interface base functionality and benchmarking results.
-    \item Chapter 6 summarizes the results achieved in this work and discusses potential improvements for the sandbox.
+    \item \textbf{Chapter 2} surveys existing custom-instruction interfaces (CFU,
+    CXU, Core-V-XIF), FPGA-based SoC frameworks, related sandboxes, and prior
+    work applying custom ISA extensions to cryptography, compression, and machine
+    learning.
+
+    \item \textbf{Chapter 3} provides the theoretical background covering the
+    RISC-V ISA, the VexiiRiscv pipeline, the LiteX SoC ecosystem, the CXU
+    coupling mechanism, Linux boot flow on LiteX, and the algorithmic foundations
+    of the three case studies.
+
+    \item \textbf{Chapter 4} describes the design of the CXU Playground: the
+    system architecture, the CXU plugin integration in VexiiRiscv, the Buildroot
+    environment, the runtime library, and the benchmarking methodology.
+
+    \item \textbf{Chapter 5} presents the implementation details and experimental
+    results for the AES, GZIP, and TFLite Micro extensions, and discusses
+    unimplemented features and known limitations.
+
+    \item \textbf{Chapter 6} summarises the contributions, reflects on the
+    limitations of the current implementation, and outlines directions for future
+    work.
 \end{itemize}

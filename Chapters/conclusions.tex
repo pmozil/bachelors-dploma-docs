@@ -1,1 +1,148 @@
 \chapter{Conclusions}
+
+\section{Summary of Contributions}
+
+This thesis addressed a concrete gap in the RISC-V custom-extension ecosystem: at
+the outset, the Composable eXtension Unit (CXU) specification existed as a design
+document but had no hardware implementation on any processor, and no sandbox
+environment supported its features. This work delivers both.
+
+The \textbf{CXU Playground} is an open-source, full-stack development and
+benchmarking environment for RISC-V custom extensions, built on the LiteX SoC
+framework and targeting the VexiiRiscv processor. The following components were
+designed, implemented, and validated as part of this work:
+
+\begin{itemize}
+    \item A \textbf{SpinalHDL pipeline plugin} for VexiiRiscv that implements the
+          CXU interface: opcode interception at the execute stage, forwarding of
+          \texttt{rs1}/\texttt{rs2} operands, writeback of the result to \texttt{rd},
+          pipeline stall management for multi-cycle operations, and
+          \texttt{cxidx}/\texttt{cxdata} CSR support for extension selection and
+          shared state.
+
+    \item A \textbf{Buildroot-integrated Linux environment} that cross-compiles the
+          Linux kernel, root filesystem, and user-space utilities for the RV32IMA
+          target, enabling OS-level benchmarking under realistic system conditions.
+
+    \item A \textbf{C-level CXU runtime library} that wraps the assembly-level
+          invocation into safe callable functions, manages extension multiplexing
+          via the \texttt{cxidx} register, and provides a portable API that
+          eliminates the need for inline assembly in user code.
+
+    \item Three \textbf{case-study extensions} --- AES GF$(2^8)$ acceleration,
+          GZIP/DEFLATE bit-manipulation acceleration, and a TFLite Micro
+          Multiply-Accumulate (MAC) extension --- each with a paired software
+          reference implementation, a Verilator verification testbench, and a
+          benchmarking suite.
+\end{itemize}
+
+\section{Key Results}
+
+\textbf{AES acceleration} produced the most dramatic result. Offloading SubBytes
+and MixColumns arithmetic to a single-cycle combinational CXU instruction reduced
+cycles per encrypted byte from approximately 2{,}670 to approximately 506, a
+consistent \textbf{5.25$\times$ speedup} across all tested input sizes from 128 B
+to 16{,}768 B. The gain is directly attributable to replacing 5--6 iteration loops
+of 3--4 instructions each with a single pipeline cycle per $\text{GF}(2^8)$
+operation. The speedup is stable across input sizes, confirming that fixed
+invocation overhead is negligible relative to the per-byte compute savings. OS
+overhead in the Linux environment adds only $\pm$2\% jitter with no measurable
+change in the mean speedup factor.
+
+\textbf{GZIP decompression} showed an approximately \textbf{10\% reduction in CPU
+time} for the bit-stream manipulation component of DEFLATE decompression. The
+smaller end-to-end gain compared to AES reflects two factors: the LZ77 sliding
+window search --- a substantial fraction of total decompression work --- is not
+accelerated by the current extension, and the end-to-end measurements include
+filesystem I/O, which dilutes the compute-side improvement. Profiling confirms that
+this result is consistent with the fraction of the inner loop covered by the
+four custom instructions.
+
+\textbf{TFLite Micro MAC} extension correctness was verified against the TFLite
+Micro built-in inference self-tests; hardware timing data collection is ongoing.
+
+Together, these results confirm that the CXU Playground can host extensions of
+varying complexity and that even a small number of tightly coupled custom
+instructions can yield order-of-magnitude cycle reductions for
+arithmetic-intensive workloads.
+
+\section{Limitations of the Current Implementation}
+
+Three limitations of the current implementation are worth highlighting.
+
+First, \textbf{CSR access latency} is higher than the CXU specification assumes.
+Because \texttt{cxidx} and \texttt{cxdata} are memory-mapped over the Wishbone
+bus in the LiteX SoC rather than being native pipeline registers, each state read
+or write incurs a full bus-transaction penalty. This makes the shared-state
+mechanism best suited to one-time configuration rather than high-bandwidth
+inter-invocation communication, and penalises workloads that switch frequently
+between multiple extensions.
+
+Second, the \textbf{Linux kernel does not yet save and restore CXU state} as part
+of the task context switch. In a preemptive, multi-process workload, this is a
+correctness issue: if two processes share a physical CXU and the scheduler
+preempts one mid-invocation, the extension state can be corrupted. The playground
+is therefore currently safe only for single-process CXU workloads under Linux.
+
+Third, \textbf{CXU capabilities are not described in the Linux Device Tree}: the
+runtime library hard-codes extension addresses rather than discovering them
+dynamically through the kernel's device model.
+
+\section{Future Work}
+
+The CXU Playground provides a solid foundation for several directions of future
+work.
+
+\textbf{Kernel context-switch support} is the most pressing correctness gap. The
+CXU specification defines the required save/restore semantics; implementing them
+requires adding \texttt{cxidx}/\texttt{cxdata} to the task struct and instrumenting
+the scheduler's context-switch path. This work would make the playground safe for
+multi-process workloads and would complete the OS-facing portion of the CXU
+specification.
+
+\textbf{Device Tree integration} should follow naturally: extending the LiteX SoC
+generator to emit DTS nodes describing available extensions (index range, state
+width, memory-access permissions) would allow a kernel driver to enumerate and
+manage extensions through the standard Linux device model, and would enable
+future hardware/software co-design tools to query the platform capabilities
+programmatically.
+
+\textbf{CSR latency reduction} could be addressed by implementing \texttt{cxidx}
+and \texttt{cxdata} as native VexiiRiscv pipeline registers rather than
+Wishbone-mapped registers, bringing access latency in line with the CXU
+specification's assumptions and enabling stateful extensions to operate efficiently.
+
+\textbf{Post-quantum cryptography} is a natural extension of the case studies in
+Chapter~5. The related work survey in Chapter~2 documents speedups of up to
+9.6$\times$ for CRYSTALS-Kyber using tightly coupled custom instructions
+\cite{Levi2020RISQV}. Implementing NTT butterfly and modular reduction operations
+as CXU extensions, and measuring them within the Playground, would both validate
+the framework for a security-critical workload and produce results directly
+comparable to RISQ-V and similar prior work.
+
+\textbf{Cross-core portability} --- porting the CXU plugin to a second RV32
+implementation such as CVA6 or the SERV core --- would validate the original
+premise of the composable-extensions family: that a single extension implementation
+can be reused across different processor microarchitectures. This would also test
+whether the SpinalHDL plugin abstraction is genuinely separable from VexiiRiscv's
+internals.
+
+\textbf{FPGA resource and Fmax characterisation} should be added to the benchmarking
+workflow. Reporting LUT count, flip-flop usage, BRAM consumption, and synthesis
+Fmax alongside cycle-count data would give extension designers an accurate picture
+of the area-performance trade-off and would make the Playground's benchmark results
+directly comparable to FPGA-based results in the related-work literature.
+
+\section{Closing Remarks}
+
+The CXU Playground demonstrates that a full-stack, Linux-capable sandbox for
+composable RISC-V custom extensions is practically achievable on commodity FPGA
+hardware. The framework successfully lowers the barrier to entry for custom
+hardware acceleration research by automating SoC generation, Linux integration,
+cross-compilation, and benchmarking into a single cohesive environment. The
+measured 5.25$\times$ AES speedup confirms that even a small number of carefully
+designed, tightly coupled hardware instructions can deliver substantial gains for
+the class of workloads most relevant to embedded cryptography and machine learning.
+The open-source playground provides a reproducible platform for the community to
+build on, and the limitations identified here chart a clear path toward a more
+complete implementation.

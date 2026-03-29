@@ -220,152 +220,99 @@ These restrictions eventually led to the development of the more flexible CXU sp
 \caption{CFU Playground full-stack architecture.}
 \end{figure}
 
-\section{Applications of Custom Instruction Extensions in Cryptography and Systems}
+\section{Applications of Custom Instruction Extensions}
 
-The purpose of CFU, FRANCIS-V and CXU is to provide a straightforward interface to create and
-work with custom extensions. This section is an overview of the applications of custom extensions,
-as well as some reflections on how these extensions may be used.
+The interface standards and sandboxes above exist to serve a practical need: a wide
+range of important algorithms benefit substantially from narrowly scoped hardware
+acceleration. This section surveys the application domains most relevant to the case
+studies in this thesis --- cryptography, data compression, and machine learning ---
+and draws out the lessons that inform the design of the extensions evaluated in
+Chapter~5.
 
-These works illustrate practical motivations for custom instruction
-playground, particularly in security-critical and
-performance-sensitive domains.
+\subsection{AES and Symmetric Cryptography}
 
-\subsection{Efficient Software Masking of AES through Instruction Set Extension}
+AES \cite{NIST_AES} is based on a substitution-permutation network whose inner
+operations --- SubBytes (an S-box lookup over $\text{GF}(2^8)$) and MixColumns
+(matrix multiplication over $\text{GF}(2^8)$) --- map naturally onto
+combinational hardware. Cui and Balasch \cite{Cui2023MaskingAES} demonstrate this
+concretely in the context of masked AES, introducing constant-time finite-field
+instructions that simultaneously improve performance and resistance to side-channel
+attacks. Their result is especially relevant here because it shows that a small
+number of carefully scoped ISA extensions --- rather than a monolithic AES
+coprocessor --- can yield substantial gains while preserving software flexibility.
 
-The work in \cite{Cui2023MaskingAES} investigates how architectural support can improve secure implementations of AES that are resistant to side-channel attacks. Software masking is widely used as a countermeasure against power analysis and timing attacks, but it typically introduces significant overhead due to the need for mask generation, masked S-box evaluation, and careful intermediate state handling.
+Primas et al. \cite{Primas2024NLUV} take a related approach with the NLU-V
+extension, fusing S-box substitution and linear diffusion into a single hardware
+block to minimise intermediate data movement for both AES and PRESENT. Both
+works support the design choice made in Chapter~4 to expose $\text{GF}(2^8)$
+arithmetic as a primitive CXU instruction rather than implementing a full AES round.
 
-Instead of implementing a fully dedicated AES accelerator, the authors focus on accelerating specific primitives required for masked computation. In particular, they introduce instructions for constant-time finite-field arithmetic and masked substitution operations. This approach preserves the flexibility of a software implementation while reducing the computational penalty usually associated with masking.
+\subsection{Post-Quantum Cryptography}
 
-This work is especially relevant in the context of custom instruction research because it demonstrates that even narrowly scoped ISA extensions—when carefully designed—can significantly improve both security and performance without sacrificing portability.
+Classical public-key cryptosystems are vulnerable to Shor's algorithm on
+sufficiently powerful quantum computers, motivating the NIST post-quantum
+standardisation effort \cite{Vranken2023UniformMul, Levi2020RISQV}. Lattice-based
+schemes such as CRYSTALS-Kyber and NewHope rely on polynomial arithmetic,
+particularly the Number Theoretic Transform (NTT), whose butterfly operations and
+modular reductions are expensive on a standard ALU.
 
+Sozbilir et al. \cite{Sozbilir2020Kyber} prototype NTT-specific ISA extensions on
+VexRiscv and report up to an 85\% speedup for Kyber and NewHope, demonstrating
+that the class of processor used in this work is a viable target for PQC
+acceleration. Levi et al. \cite{Levi2020RISQV} extend this further with
+RISQ-V, a set of 29 tightly coupled custom instructions achieving a 9.6$\times$
+speedup for Kyber. Franchetti et al. \cite{Franchetti2024MultiWord} address the
+related problem of multi-word carry-propagation arithmetic required by classical
+public-key schemes, using a coprocessor interface structurally similar to the CXU.
+Vranken et al. \cite{Vranken2023UniformMul} argue for a uniform set of
+multiply-accumulate and modular-reduction primitives capable of serving both
+classical and post-quantum schemes, which foreshadows the approach taken for the
+MAC extension in Chapter~5.
 
-\subsection{ISA Extensions for Finite Field Arithmetic Accelerating Kyber and NewHope on RISC-V}
+These works collectively motivate extending the CXU Playground to post-quantum
+workloads as a natural direction for future work.
 
-The paper \cite{Sozbilir2020Kyber}
-focuses on accelerating lattice-based post-quantum cryptographic schemes,
-specifically \textbf{CRYSTALS-Kyber} and \textbf{NewHope}.
-These schemes rely on polynomial arithmetic over finite fields,
-particularly Number Theoretic Transform (NTT) operations and modular reductions.
+\subsection{Hashing}
 
-The authors introduce custom RISC-V ISA extensions tailored for finite field
-multiplication, modular reduction, and butterfly operations used in NTT.
-Rather than implementing a complete coprocessor,
-the extensions expose low-level arithmetic primitives that can be composed
-by software routines implementing the cryptographic algorithms.
+Alawadi et al. \cite{Alawadi2025SHA3} implement the full Keccak-f permutation as a
+single custom RISC-V instruction, reporting substantial reductions in instruction
+count and cycle time for SHA-3. Their area-performance trade-off analysis provides a
+useful reference for understanding the cost of integrating high-complexity primitives
+into the CXU.
 
-\subsection{Uniform Instruction Set Extensions for Multiplications in Contemporary and Post-Quantum Cryptography}
+\subsection{Data Compression}
 
-The work \cite{Vranken2023UniformMul}
-proposes a unified set of ISA extensions targeting multiplication-heavy
-operations common across classical and post-quantum cryptographic schemes.
+GZIP/DEFLATE combines LZ77 back-reference encoding with Huffman entropy coding
+\cite{RFC1951}. The performance bottleneck lies in the inner decompression loop,
+which requires repeated bit-field extractions, variable-width mask generation, and
+modular address arithmetic --- all operations that reduce to a handful of hardware
+gates but require several ALU instructions in software. The custom instructions
+designed in Section~3.9 and evaluated in Chapter~5 target exactly this hot path.
+To our knowledge, no prior work has applied the CXU or CFU mechanism to GZIP
+acceleration, making this a novel case study.
 
-Many cryptographic algorithms—ranging from elliptic curve cryptography (ECC)
-to lattice-based constructions—are dominated by multi-precision integer
-multiplication and modular arithmetic.
-The authors argue that instead of designing algorithm-specific extensions,
-a uniform set of multiplication and reduction primitives can support
-a wide range of schemes.
+\subsection{Machine Learning Inference}
 
-The proposed extensions focus on word-level multiply-accumulate,
-high-part multiplication, and modular reduction primitives that
-can be composed efficiently by software.
-The evaluation demonstrates improvements across multiple algorithms,
-including both traditional public-key cryptography and NIST PQC candidates.
+Neural network inference on microcontrollers is dominated by Multiply-Accumulate
+(MAC) operations in convolutional and fully connected layers. TensorFlow Lite Micro
+\cite{David2021TFLiteMicro} provides portable INT8-quantised inference kernels for
+this class of device. The CMSIS-NN library \cite{Lai2018CMSISNN} shows that ARM DSP
+SIMD MAC instructions yield up to a 4.6$\times$ improvement over scalar code; the
+PULP platform \cite{PULP2015} achieves comparable gains on RISC-V with
+hardware-loop and dot-product extensions. The MAC extension evaluated in
+Chapter~5 follows the same principle, exposing a fused multiply-accumulate
+operation as a single-cycle CXU instruction.
 
-\subsection{RISQ-V: Tightly Coupled Accelerators for Post-Quantum Cryptography on RISC-V}
+MiniFloat-NN and ExSdotp \cite{Oliveira2022MiniFloat} push this further with
+float8 dot-product accumulation for low-precision training, demonstrating that the
+same CXU-style integration pattern scales to more exotic arithmetic formats.
 
-Levi et al.\cite{Levi2020RISQV} present RISQ-V, a tightly coupled accelerator
-architecture targeting lattice-based post-quantum cryptography (PQC) schemes
-such as CRYSTALS-Kyber. The work introduces 29 new custom RISC-V instructions
-designed to accelerate core arithmetic kernels, including modular reduction,
-polynomial multiplication, and Number Theoretic Transform (NTT) operations.
+\subsection{Linux on LiteX}
 
-Rather than relying on a loosely coupled external coprocessor,
-RISQ-V integrates the accelerator closely with the processor pipeline,
-reducing communication overhead and improving data locality.
-Experimental results demonstrate up to a 9.6 times speedup
-for Kyber compared to a baseline software implementation,
-highlighting the effectiveness of carefully co-designed ISA extensions for PQC workloads.
-
-\subsection{Towards a RISC-V Instruction Set Extension for Multi-Word Arithmetic}
-
-Franchetti et al. \cite{Franchetti2024MultiWord} focus on accelerating multi-word arithmetic,
-which is used in public-key cryptography and big-integer computations.
-The authors propose carry-aware instruction set extensions that explicitly manage
-carry propagation across multiple machine words, thereby reducing the overhead associated
-with software-emulated big-number arithmetic.
-
-Their design is implemented via a coprocessor interface,
-demonstrating how extended arithmetic primitives
-can be integrated without fundamentally altering the base pipeline.
-
-\subsection{Microarchitecture Design and Benchmarking of a Custom SHA-3 Instruction}
-
-This work \cite{Alawadi2025SHA3} explores the hardware realization of a full
-Keccak-f permutation as a single custom RISC-V instruction. Targeting SHA-3 hashing,
-the authors design a microarchitectural extension that encapsulates the complex
-round transformations of Keccak within a dedicated functional unit.
-
-By exposing the permutation as an atomic instruction, the design significantly
-reduces instruction count and control overhead compared to software implementations.
-The work includes detailed benchmarking and area–performance trade-off analysis,
-demonstrating substantial speedups and providing insight into the cost of
-integrating high-complexity cryptographic primitives directly into the ISA.
-
-\subsection{NLU-V: Instruction Set Extensions for Efficient Symmetric Cryptography}
-
-The work \cite{Primas2024NLUV} introduces NLU-V, an ISA extension
-that combines non-linear and linear transformation units to accelerate symmetric block
-ciphers such as AES and PRESENT.
-
-The extension integrates substitution-box (S-box)
-logic with linear diffusion operations into a unified hardware block, minimizing
-intermediate data movement and reducing pipeline stalls.
-
-\subsection{MiniFloat-NN and ExSdotp: Modular ISEs for Low-Precision Neural Network Training}
-
-The work \cite{Oliveira2022MiniFloat} proposes MiniFloat-NN and ExSdotp,
-modular RISC-V instruction set extensions targeting low-precision neural network training and inference.
-The design introduces float8 arithmetic support and specialized dot-product accumulation instructions,
-enabling efficient execution of quantized neural network workloads.
-
-The extensions are structured to allow integration through coprocessor-style interfaces,
-aligning with custom extension (CXU) paradigms. Experimental results indicate
-improved energy efficiency and computational density for low-precision workloads,
-demonstrating the flexibility of RISC-V in accommodating emerging AI-centric computation models.
-
-\subsection{Hardware Acceleration for Edge Machine Learning}
-
-The deployment of deep learning models on resource-constrained microcontrollers,
-often referred to as Edge AI or TinyML, heavily relies on the optimization of underlying arithmetic operations.
-Neural network inference is dominated by matrix multiplication,
-which at its core consists of repeated Multiply-Accumulate (MAC) operations.
-
-Frameworks like TensorFlow Lite for Microcontrollers (TFLite Micro) \cite{David2021TFLiteMicro}
-provide reference software implementations for these operations. However, purely software-based execution
-on embedded processors often fails to meet strict latency and power constraints.
-To address this, various works have proposed ISA extensions and co-processors.
-For example, the CMSIS-NN library \cite{Lai2018CMSISNN} leverages ARM DSP extensions (like SIMD MAC instructions)
-to accelerate neural network primitives, achieving up to a 4.6x performance improvement over baseline implementations.
-
-Similarly, the PULP (Parallel Ultra-Low-Power) platform \cite{PULP2015} incorporates custom RISC-V DSP extensions, including hardware loops and dot-product instructions, to accelerate convolutional and fully connected layers. These approaches demonstrate that introducing specialized MAC instructions directly into the CPU pipeline can significantly reduce the cycle count for machine learning workloads without the overhead of offloading data to a heavy external accelerator.
-
-\subsection{Linux on LiteX VexRiscV}
-
-The project \cite{LinuxOnLiteXGitHub} demonstrates the feasibility of
-running a full Linux operating system on a soft RISC-V core
-integrated within a \textbf{LiteX} FPGA-based SoC.
-
-The authors describe required architectural extensions,
-including Memory Management Unit support,
-interrupt handling, and peripheral integration necessary
-for Linux compatibility.
-The work highlights how modular SoC construction using LiteX
-enables integration of CPUs, memory controllers, and IO devices
-sufficient for a general-purpose operating system.
-
-The ability to run Linux on a softcore such as VexRiscV
-also provides a realistic evaluation environment for
-custom ISA extensions, allowing performance and usability
-to be assessed under real-world workloads rather than
-isolated microbenchmarks.
+Running benchmarks inside a full operating system is important for obtaining
+performance numbers that reflect real-world deployment conditions rather than
+isolated microbenchmarks. The Linux-on-LiteX-VexRiscv project \cite{LinuxOnLiteXGitHub}
+establishes the feasibility of booting Linux on a soft RISC-V core in a LiteX SoC,
+and documents the required hardware configuration (MMU, atomic instructions,
+supervisor privilege mode). This work adopts the same configuration and extends it
+with CXU hardware.

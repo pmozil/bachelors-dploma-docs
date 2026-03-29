@@ -16,7 +16,7 @@ offering support for multiple extensions, shared state, and higher-level languag
 
 As of the time of writing this work, with the exception of our implementation,
 there is currently no implementation of the CXU interface for any existing RISC-V processor.
-As so, there is also no unified sandbox environment that allows developers
+As such, there is also no unified sandbox environment that allows developers
 to prototype, test, and benchmark these custom hardware units
 under realistic, operating system-level conditions.
 
@@ -37,7 +37,7 @@ coprocessors within an embedded system.
 \section{System Architecture and Playground Design}
 
 The proposed sandbox is built upon the litex framework.
-The litex framework is used as a basis for the sandbox, as to have a
+The LiteX framework is used as a basis for the sandbox, as to have a
 build system and to abstract low-level hardware connectivity.
 LiteX enables the automated generation of the FPGA-based SoC
 by connecting the central CPU core with essential peripherals,
@@ -120,7 +120,7 @@ The data flow integration is designed as such:
 
 The core contribution of this work is the unified sandbox
 that allows users to seamlessly design, test, and benchmark CXU hardware.
-Building software for this litex-based system requires a cross-compilation
+Building software for this LiteX-based system requires a cross-compilation
 toolchain targeting the RV32IMA instruction set and ILP32 ABI.
 
 To evaluate the custom extensions under realistic conditions,
@@ -215,10 +215,10 @@ The testing strategy is twofold:
     the CXU-accelerated versions.
 \end{itemize}
 
-\section{General Methodology}
+\section{Testing and Benchmarking Methodology}
 
-The data collection process for this work is constructed of
-phases: the implementation of the CXU interface itself,
+The data collection process for this work consists of two phases:
+the implementation of the CXU interface itself,
 and the implementation of concrete hardware extensions used as experimental subjects.
 
 The first part is implementing the CXU extension mechanism within
@@ -234,7 +234,7 @@ extension and exchange shared state.
 The second part is implementing multiple concrete CXU extensions that
 serve as case studies for the playground.
 
-The first extension is an AES extension offloads finite
+The first extension is an AES extension that offloads finite
 field arithmetic in $\text{GF}(2^8)$, specifically the \textbf{SubBytes} and
 \textbf{MixColumns} transformations, to dedicated hardware logic, replacing
 multi-instruction software loops with a single custom instruction per
@@ -260,9 +260,7 @@ of the CXU-accelerated variants for the same inputs.
 Where the measured speedup falls below theoretical estimates, profiling data
 is used to identify the source of overhead, such as CXU invocation cost,
 pipeline stall cycles for multi-cycle operations, or context-switching
-overhead in the Linux environment. Results from bare-metal microbenchmarks
-are contrasted with full-system Linux results to assess the overhead
-introduced by the operating system and the CXU runtime library.
+overhead in the Linux environment.
 
 \section{Limitations}
 
