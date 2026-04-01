@@ -46,7 +46,7 @@ Communication between these modules is handled by the Wishbone bus,
 which facilitates memory-mapped I/O.
 
 The core processor utilized in this SoC is VexiiRiscv,
-an RV32IMA configured CPU implemented in the SpinalHDL hardware description language.
+an RV32IMAFC configured CPU implemented in the SpinalHDL hardware description language.
 VexiiRiscv's plugin-based architecture is highly parameterized,
 allowing for scalable feature composition and the clean integration
 of custom execution units.
@@ -245,7 +245,7 @@ GZIP decompression extension.
 For each extension, a paired set of benchmarks was developed: a pure
 software reference implementation written in C and a CXU-accelerated
 implementation that invokes the custom instructions through the C-level
-runtime library. Both variants were compiled for the \textbf{RV32IMA}
+runtime library. Both variants were compiled for the \textbf{RV32IMAFC}
 target using the same cross-compilation toolchain and optimisation flags to
 ensure a fair comparison. Execution time was measured using hardware performance
 counters and Linux profiling utilities, recording cycle counts and wall-clock
