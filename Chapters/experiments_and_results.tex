@@ -215,12 +215,35 @@ Only a placeholder table right here for now.
 
 \begin{table}[htb]
 \centering
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Implementation} & \textbf{Inference Time (ms)} & \textbf{Speedup} \\ \hline
-Baseline Software (RV32IM) & BASELINETIME & 1.0x \\ \hline
-CXU MAC Extension & CXUTIME & SPEEDUPx \\ \hline
-\end{tabular}
+\pgfplotstableread[col sep=comma]{results_tflite_acc.csv}\dataTFLite
+
+\pgfplotstabletypeset[
+    columns={size,software_time_ns,hardware_time_ns,speedup},
+    display columns/0/.style={
+        column name={\textbf{Input Size}},
+        int detect
+    },
+    display columns/1/.style={
+        column name={\textbf{Software Time (ms)}},
+        fixed,
+        precision=3
+    },
+    display columns/2/.style={
+        column name={\textbf{Hardware Time (ms)}},
+        fixed,
+        precision=3
+    },
+    display columns/3/.style={
+        column name={\textbf{Speedup}},
+        fixed,
+        precision=3,
+        postproc cell content/.append style={
+            /pgfplots/table/@cell content/.add={}{x}
+        }
+    },
+    every head row/.style={before row=\toprule,after row=\midrule},
+    every last row/.style={after row=\bottomrule}
+]{\dataTFLite}
 \caption{Inference latency comparison for TFLite Micro using the CXU MAC extension.}
 \label{tab:tflite_results}
 \end{table}
