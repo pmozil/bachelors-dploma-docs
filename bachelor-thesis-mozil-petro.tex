@@ -188,9 +188,9 @@ headsepline, % Uncomment to get a line under the header
 
 \vspace*{0.2\textheight}
 
-\noindent\enquote{\itshape Thanks to my solid academic training, today I can write hundreds of words on virtually any topic without possessing a shred of information, which is how I got a good job in journalism.}\bigbreak
+\noindent\enquote{\itshape If you wish to make an apple pie from scratch, you must first invent the universe.}\bigbreak
 
-\hfill Dave Barry
+\hfill Carl Sagan
 
 %----------------------------------------------------------------------------------------
 %    ABSTRACT PAGE
@@ -198,6 +198,35 @@ headsepline, % Uncomment to get a line under the header
 
 \begin{abstract}
 \addchaptertocentry{\abstractname} % Add the abstract to the table of contents
+
+Custom hardware extensions for RISC-V processors can be a way to gain
+incredible performance for compute-bound (or compute and memory) workloads,
+such as cryptography, data compression and machine learning inference.
+The Composable eXtension Unit (CXU) specification was proposed as
+a modern, flexible interface for integrating multiple custom
+extensions into a RISC-V processor, supporting shared extension
+state and higher-level language integration.
+
+At the time of writing,  no hardware implementation of the CXU interface exists for any RISC-V processor, and no sandbox environment supports its development and evaluation under realistic system conditions.
+
+In this thesis we implement the CXU interface as a SpinalHDL plugin
+for the VexiiRiscv processor and build the CXU Playground --
+an open-source, full-stack development and benchmarking environment
+built on the LiteX SoC framework. The Playground provides automated
+SoC generation, a Buildroot Linux environment for OS-level testing,
+and a C-level runtime library for invoking custom extensions
+without inline assembly.
+
+To validate the framework, we implement and benchmark three case-study
+extensions: an AES GF($2^8$) accelerator, a GZIP/DEFLATE bit-manipulation
+accelerator, and a multiply-accumulate (MAC) extension for
+TensorFlow Lite Micro inference.
+
+The AES extension achieves a consistent $5.25\times$ reduction in
+cycles per encrypted byte, confirming that tightly coupled custom
+instructions can yield substantial gains for arithmetic-intensive
+embedded workloads.
+
 \end{abstract}
 
 %----------------------------------------------------------------------------------------
@@ -289,7 +318,7 @@ even in times, where i did not have faith.
 %    DEDICATION
 %----------------------------------------------------------------------------------------
 
-\dedicatory{For/Dedicated to/To my\ldots}
+\dedicatory{Dedicated to my friends and family - for your love and faith}
 
 %----------------------------------------------------------------------------------------
 %    THESIS CONTENT - CHAPTERS

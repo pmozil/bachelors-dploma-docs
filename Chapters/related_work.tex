@@ -231,7 +231,7 @@ Chapter~5.
 
 \subsection{AES and Symmetric Cryptography}
 
-AES \cite{NIST_AES} is based on a substitution-permutation network whose inner
+AES \cite{NISTAES} is based on a substitution-permutation network whose inner
 operations --- SubBytes (an S-box lookup over $\text{GF}(2^8)$) and MixColumns
 (matrix multiplication over $\text{GF}(2^8)$) --- map naturally onto
 combinational hardware. Cui and Balasch \cite{Cui2023MaskingAES} demonstrate this
@@ -283,7 +283,7 @@ into the CXU.
 \subsection{Data Compression}
 
 GZIP/DEFLATE combines LZ77 back-reference encoding with Huffman entropy coding
-\cite{RFC1951}. The performance bottleneck lies in the inner decompression loop,
+\cite{DEFLATESpec}. The performance bottleneck lies in the inner decompression loop,
 which requires repeated bit-field extractions, variable-width mask generation, and
 modular address arithmetic --- all operations that reduce to a handful of hardware
 gates but require several ALU instructions in software. The custom instructions
