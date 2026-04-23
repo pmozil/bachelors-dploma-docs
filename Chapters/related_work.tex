@@ -1,133 +1,176 @@
 \chapter{Related Work}
+\label{ch:related_work}
 
-In this chapter, we review frameworks for development of FPGA-based SOCs,
-works that explore hardware-based optimizations for certain algorithms
-and works that explore other ways of managing multiple extensions for RISC-V-based CPUs.
+The growing interest in domain-specific hardware acceleration on RISC-V processors
+has produced a range of interface standards, development frameworks, and sandboxes,
+each addressing part of the problem this thesis targets.
+This chapter surveys the most relevant prior work across three dimensions: the
+interface specifications that define how custom extensions attach to a RISC-V core
+(Section~\ref{sec:related_riscv_extensions}), the SoC frameworks used to build
+the surrounding hardware platform (Section~\ref{sec:related_fpga_frameworks}), and
+the sandboxes designed to lower the barrier to prototyping custom instructions
+(Section~\ref{sec:related_sandboxes}).
+The chapter closes with a survey of application domains --- cryptography, compression,
+and machine learning --- where prior work has demonstrated the practical value of
+tightly coupled custom instructions, establishing the benchmarks against which
+the extensions developed in this work are evaluated
+(Section~\ref{sec:related_applications}).
 
 \section{RISC-V Extensions For Custom Instruction Integration}
+\label{sec:related_riscv_extensions}
 
-In this section, we provide an overview of what the composable
-custom extensions specification is and what it may be used for.
+Several interface specifications have been proposed to standardise the connection between
+a RISC-V processor and custom hardware accelerators.
+These specifications differ considerably in the number of extensions they support,
+the degree of OS integration they define, and the constraints they impose on the
+programmer, all of which directly motivated the design choices made in this work.
 
 \subsection{CFU}
+\label{subsec:cfu}
 
-Composable Custom Extensions \cite{Gray2022CFU, Gray2025CXU, Gray2025CXUGithub} is a
-RISC-V extension proposed by Jan Gray et al. It's an extension aimed at making custom
-extensions modular and usable between different implementations of RISC-V CPUs.
-The motivation behind the composable custom extensions is that many RISC-V CPUs
-use some sort of custom extensions, yet there is no cross-implementation interoperability,
-and so there is many implementations of a single extension (e. g. SIMD multiply-accumulate)
-across multiple RISC-V CPU implementations. One solution to that is to provide a common logic
-interface to connect extensions to, and that is exactly the Composable Custom Extensions RISC-V
-ISA extension.
+The Custom Function Unit (CFU) specification \cite{Gray2022CFU, Gray2025CXU, Gray2025CXUGithub}
+was proposed by Jan Gray et al.\ to make custom extensions modular and reusable
+across different RISC-V CPU implementations.
+The motivation was straightforward: many RISC-V processors incorporate some form of
+custom extension --- for instance, a SIMD multiply-accumulate unit --- yet no
+cross-implementation interoperability exists, resulting in duplicated effort whenever
+the same acceleration is ported to a new core.
+The CFU addresses this by defining a common logic interface to which a single custom
+extension can be attached, along with timing, logical, and combinatorial constraints.
+The full interface specification is examined in Chapter~\ref{ch:theoretical_background}.
 
-The first version of composable custom extensions if the Custom Function Unit (CFU).
-It was proposed in 2020 by Jan Gray et al. and provides an interface to connect custom
-extensions to along with timing, logic and combinatorial constraints for what an extension
-may do \cite{Gray2022CFU}.
-We will go over what constitutes a composable extension in the theoretical background chapter.
-
-The CFU allows for a single extension to be used with a CPU,
-and it requires the user to invoke a \textbf{custom-0|1|2|3} instruction,
-even when not using assembly, such that when using a higher-level language,
-the user would still need to invoke an assembly instruction.
-The CFU also may not access memory. \cite{Gray2022CFU}
+Despite its value in establishing the concept of composable extensions, the CFU has
+important limitations.
+Only one extension may be connected per hardware thread, the extension may not access
+memory, and even when programming in a higher-level language the user must invoke a
+\textbf{custom-0|1|2|3} assembly instruction directly \cite{Gray2022CFU}.
+These constraints make the CFU impractical for workloads that require multiple distinct
+accelerators or expect a clean C-level programming model.
 
 \subsection{CXU}
+\label{subsec:cxu}
 
-The CXU extension is a newer version of composable custom extensions.
-It allows for up to $2^{\textbf{XLEN}}$ custom extensions.
-It also allows for extensions to have a shared state and defines the limitations under which an extension may have access to memory. \cite{Gray2025CXU}
-
-Notably, the CXU specification also defines the ABI, making it possible to call the extension from a higher-level language without invoking the assembly instruction directly.
-An example of a CXU runtime is also provided, such that calls to the CXU extensions
-would be wrapped in helper functions that select a proper extension, save the previous state
-and clean up the context afterwards.
-The specification was developed with support for operating systems in mind, and it
-specifies how the OS and process context switching is to be done with respect to the CXU
-state as well.
+The CXU specification \cite{Gray2025CXU} is the successor to the CFU, designed to
+address its principal limitations.
+It supports up to $2^{\textbf{XLEN}}$ simultaneous extensions, permits extensions to
+maintain a shared state, and defines the conditions under which an extension may access
+memory.
+Notably, the CXU specification also defines a standardised Application Binary Interface
+(ABI), making it possible to invoke an extension from C without inline assembly.
+A reference runtime implementation is provided, in which calls to CXU extensions are
+wrapped in helper functions that select the appropriate extension via the
+\texttt{cxidx} CSR, save the previous state, and clean up the context afterwards.
+The specification was developed with operating system support in mind and explicitly
+defines how the kernel must save and restore CXU state during context switches.
+As noted in Chapter~\ref{ch:introduction}, no hardware implementation of this interface
+existed prior to the present work, which forms the primary gap this thesis fills.
 
 \subsection{Core-V-XIF}
+\label{subsec:corev_xif}
 
-\textbf{Core-V} E\textbf{X}tensible \textbf{I}nter\textbf{F}ace \cite{OpenHW2021XIF} is a
-RISC-V extension interface for implementing custom ISA extensions and coprocessors.
-As composable custom extensions, it's an interface that allows for custom extensions to be
-integrated into any CPU that supports the Core-V-XIF interface.
+The \textbf{Core-V} E\textbf{X}tensible \textbf{I}nter\textbf{F}ace
+\cite{OpenHW2021XIF} is an alternative RISC-V extension interface that supports
+custom ISA extensions and coprocessors.
+Like the composable custom extensions family, Core-V-XIF provides a bus-level interface
+that any compliant CPU can expose.
+Unlike the CFU and CXU, it permits custom CSRs and imposes fewer restrictions on
+extension behaviour, offering greater flexibility at the cost of a less uniform
+programming model.
+A sandbox built on Core-V-XIF, FRANCIS-V \cite{Egert2023FRANCISV}, is discussed further
+in Section~\ref{sec:related_sandboxes}; however, because FRANCIS-V is tightly coupled
+to a specific CPU implementation, extensions developed for it cannot be straightforwardly
+ported to other cores, which limits the reusability that the CXU specification was
+designed to provide.
 
-Unlike composable custom extensions, Core-V-XIF allows for custom CSRs and overall is less
-restrictive. Like the CFU Playgroud \cite{CFUPlayground2022}, there is an implementation of a
-sandbox for custom extensions, Francis-V \cite{Egert2023FRANCISV}.
-However, it's more tightly coupled to a certain CPU implementation, and would not allow
-for straightforward interoperability of implemented extensions.
+\section{Frameworks for FPGA-based SOC Development}
+\label{sec:related_fpga_frameworks}
 
-\section{Frameworks for FPGA-based SOC development}
-
-In this section, we provide an overview for frameworks that provide a base for developing
-FPGA-based SOCs. These frameworks usually provide a way to extend the SOC
-with additional functionality, be it an ISA extension or an IO device, e. g.
-a specialized USB port for debugging.
-The frameworks usually consist of modules, which are then assembled into a bigger system.
+Beyond the interface specification, building a CXU-capable system requires a framework
+that can assemble the CPU, memory, peripherals, and custom hardware logic into a coherent
+SoC.
+This section surveys the most relevant frameworks, noting for each where they fall short
+of the needs of this work.
 
 \subsection{LiteX}
+\label{subsec:litex}
 
-\textbf{LiteX} \cite{LiteXGitHub} is an open-source python-based framework for building
-FPGA-based SoCs. It provides modules for the bus, IO and CPU integration
-(notably VexiiRiscv \cite{VexiiRiscVGithub}).
-It includes support for most popular dram modules used on FPGA devboards,
-support for ethernet, PCIE and SATA buses, support for SD card readers,
-inter-chip communication and most popular serial communication buses,
-notably I2C, UART, SPI and USB.
-
-The most popular implementation of an environment for development of CFUs,
-the  CFU Playground \cite{CFUPlayground2022}, used LiteX as a basis for it's environment.
-
-We use litex for our implementation as well.
+\textbf{LiteX} \cite{LiteXGitHub} is an open-source, Python-based framework for
+building FPGA-based SoCs.
+It provides modules for bus integration, I/O, and CPU instantiation --- notably including
+VexiiRiscv \cite{VexiiRiscVGithub} --- as well as drivers for the most common FPGA
+development board peripherals: DDR memory via LiteDRAM, Ethernet via LiteEth, PCIE,
+SATA, SD cards, and standard serial buses (I2C, UART, SPI, USB).
+The most widely used CFU development environment, the CFU Playground
+\cite{CFUPlayground2022}, was built on LiteX, demonstrating its suitability as a base
+for custom-extension sandboxes.
+The present work adopts LiteX as its SoC foundation for the same reason: it abstracts
+low-level hardware connectivity and provides a unified build system, allowing the
+development effort to focus on the CXU integration itself rather than peripheral plumbing.
 
 \subsection{F4PGA}
+\label{subsec:f4pga}
 
-\textbf{F4PGA} \cite{F4PGA2019} provides a fully open-source FPGA toolchain targeting multiple FPGA families. While not a SoC framework by itself,
-it is commonly used together with LiteX or custom SoC
-designs to enable reproducible, vendor-independent FPGA-based SoC development.
+\textbf{F4PGA} \cite{F4PGA2019} provides a fully open-source FPGA toolchain targeting
+multiple FPGA families.
+While not a SoC framework by itself, it is commonly paired with LiteX or custom SoC
+designs to enable reproducible, vendor-independent bitstream generation.
+It was considered as a build target for the CXU Playground but was not adopted in the
+final implementation, as the FPGA boards used in this work are adequately supported by
+vendor toolchains.
 
 \subsection{MiSoC}
+\label{subsec:misoc}
 
-\textbf{MiSoC} \cite{MiSoC2014} is the predecessor of LiteX and introduced Python-based
-SoC generation concepts.
-Although deprecated, it is historically important and illustrates
-early approaches to modular FPGA SoC construction, which directly influenced LiteX’s
-architecture.
+\textbf{MiSoC} \cite{MiSoC2014} is the predecessor of LiteX and introduced the concept
+of Python-based SoC generation.
+Although it is now deprecated, it is historically significant as the origin of the design
+patterns that LiteX inherited and extended, and is mentioned here to provide context for
+the LiteX architecture described in Chapter~\ref{ch:theoretical_background}.
 
 \subsection{PULP Platform}
+\label{subsec:pulp}
 
-\textbf{PULP} \cite{PULP2015} is an open-source RISC-V-based SoC platform focused
-on energy-efficient parallel processing and accelerator integration.
-It uses a cluster-based architecture and is widely used in academic
-research for DSP, cryptography, and accelerator-centric SoC exploration.
+\textbf{PULP} \cite{PULP2015} is an open-source RISC-V-based SoC platform designed for
+energy-efficient parallel processing and accelerator integration.
+Its cluster-based architecture has made it widely used in academic research on DSP,
+cryptography, and accelerator-centric SoC exploration, including the machine learning
+inference extensions discussed in Section~\ref{subsec:related_ml}.
+PULP was not selected as a basis for this work because its multi-core cluster model is
+orthogonal to the single-core, tightly coupled CXU interface that is the subject of
+this thesis.
 
 \subsection{SpinalHDL}
+\label{subsec:spinalhdl}
 
-\textbf{SpinalHDL} \cite{SpinalHDL2018} is a hardware construction language
-often used to build extensible SoCs, most notably the VexRiscv core.
-Its plugin-based CPU architecture enables fine-grained custom instruction
-and pipeline extensions, making it highly relevant for composable extension research.
+\textbf{SpinalHDL} \cite{SpinalHDL2018} is a hardware construction language, built on
+Scala, commonly used to implement extensible SoCs.
+Its plugin-based CPU architecture enables fine-grained custom instruction and pipeline
+extensions, making it directly relevant to composable extension research.
+VexiiRiscv \cite{VexiiRiscVGithub} --- the CPU core used in this work --- is implemented
+in SpinalHDL, and the CXU plugin described in Chapter~\ref{ch:proposed_solution} was
+developed within this framework.
+The SpinalHDL programming model is introduced in
+Section~\ref{subsec:vexii}.
 
-SpinalHDL is used in the \textbf{VexiiRISCV} \cite{VexiiRiscVGithub} implementation, and we use
-VexiiRISCV as our CPU.
+\section{Sandboxes for Simplified Development of Custom Instruction Hardware}
+\label{sec:related_sandboxes}
 
-\section{Sandboxes for simplified development of custom instruction hardware}
+The interface specifications and SoC frameworks described above address the infrastructure
+problem, but they do not by themselves lower the barrier to writing, testing, and
+benchmarking a custom extension.
+Two sandboxes have been proposed for this purpose, and both directly influenced the
+design of the CXU Playground developed in this work.
 
 \subsection{FRANCIS-V}
+\label{subsec:francisv}
 
-\textbf{FRANCIS-V}\cite{Egert2023FRANCISV}
-(FRAmework for iNtegrating Custom InstructionS into RISC‑V systems) \cite{Egert2023FRANCISV} is a
-framework aimed as making development and integration of custom extensions and coprocessors
-easier while designing RISC-V processors.
-It was proposed to make enginnering custom instructions easier.
-
-The framework provices an interface and methodology for connecting custom instruction
-hardware to a processor using the \textbf{Core-V-XiF} extension. It supports simulation,
-compilation and verificcation workflows. It allows users to automate most parts of development,
-much like the \textbf{CFU playground} and allows for customized RISC-V processors.
+\textbf{FRANCIS-V} \cite{Egert2023FRANCISV} (FRAmework for iNtegrating Custom
+InstructionS into RISC-V systems) is a framework aimed at making the design and
+integration of custom extensions and coprocessors more tractable.
+It provides an interface and methodology for connecting custom instruction hardware
+to a processor using the Core-V-XIF extension, and automates simulation, compilation,
+and verification workflows.
+In these respects it shares the same high-level goal as the CXU Playground.
 
 \begin{figure}[htb]
 \centering
@@ -164,29 +207,27 @@ much like the \textbf{CFU playground} and allows for customized RISC-V processor
 
 \end{tikzpicture}
 \caption{FRANCIS-V framework overview.}
+\label{fig:francisv}
 \end{figure}
 
+However, FRANCIS-V is tightly coupled to the Core-V-XIF interface and to the specific
+CPU implementations that expose it.
+Extensions developed within FRANCIS-V cannot be straightforwardly ported to other
+RISC-V cores, which conflicts with the portability goal of the composable extensions
+family.
+The CXU Playground targets the CXU interface instead, which is explicitly designed
+for cross-implementation reuse.
+
 \subsection{CFU Playground}
-The CFU Playground \cite{CFUPlayground2022} is an environment for development of custom
-compute units on a litex SoC.
+\label{subsec:cfu_playground}
 
-The CFU Playground \cite{CFUPlayground2022} is a full-stack open-source playground designed
-for the rapid design and evaluation of Custom Function Units (CFUs)
-to accelerate FPGA-based RISC-V soft CPUs.
-
-Originally proposed for Tiny Machine Learning (tinyML) acceleration,
-it utilizes the LiteX framework as its architectural base to provide a ready-made SoC environment
-\cite{LiteXGitHub}. The playground allows users to implement specialized hardware logic and
-write software scripts to invoke these extensions.
-
-The architecture is based on the initial version of the Composable Custom Extension specification,
-which connects a single extension to a hardware thread \cite{Gray2022CFU, CFUPlayground2022} and, usually
-a single CPU.
-While the interface supports up to 255 different function indices,
-it is characterized by some constraints: the unit may not access memory directly,
-and users must invoke instructions via assembly-level custom-0|1|2|3 opcodes,
-even when programming in higher-level languages \cite{Gray2022CFU}.
-These restrictions eventually led to the development of the more flexible CXU specification \cite{Gray2025CXU, Gray2025CXUGithub}.
+The CFU Playground \cite{CFUPlayground2022} is the closest prior work to the system
+developed in this thesis.
+It is a full-stack, open-source environment for the rapid design and evaluation of
+Custom Function Units on FPGA-based RISC-V soft CPUs, built on the LiteX framework
+and originally proposed for Tiny Machine Learning (tinyML) acceleration.
+The playground provides a ready-made SoC environment in which users can implement
+specialised hardware logic and write software to invoke their extensions.
 
 \begin{figure}[htb]
 \centering
@@ -218,101 +259,132 @@ These restrictions eventually led to the development of the more flexible CXU sp
 
 \end{tikzpicture}
 \caption{CFU Playground full-stack architecture.}
+\label{fig:cfu_playground_arch}
 \end{figure}
 
+The CFU Playground is built on the initial version of the composable custom extensions
+specification, which restricts each thread to a single extension and requires assembly-level
+\textbf{custom-0|1|2|3} opcodes even in higher-level language contexts
+\cite{Gray2022CFU, CFUPlayground2022}.
+It does not support OS-level benchmarking, as it runs bare-metal software only.
+These restrictions --- a single extension per thread, no memory access, no Linux support ---
+were precisely those that motivated the CXU specification.
+The CXU Playground developed in this work can therefore be understood as the natural
+successor to the CFU Playground: it adopts the same LiteX-based architecture but
+realises the more capable CXU interface and adds full Linux support, enabling the
+system-level evaluation that the CFU Playground cannot provide.
+
 \section{Applications of Custom Instruction Extensions}
+\label{sec:related_applications}
 
 The interface standards and sandboxes above exist to serve a practical need: a wide
-range of important algorithms benefit substantially from narrowly scoped hardware
-acceleration. This section surveys the application domains most relevant to the case
-studies in this thesis --- cryptography, data compression, and machine learning ---
-and draws out the lessons that inform the design of the extensions evaluated in
-Chapter~5.
+range of computationally intensive algorithms benefit substantially from narrowly
+scoped hardware acceleration.
+This section surveys the application domains most relevant to the case studies
+developed in this work --- cryptography, data compression, and machine learning --- and
+identifies the results against which the CXU extensions are compared in
+Chapter~\ref{ch:experiments_results}.
 
 \subsection{AES and Symmetric Cryptography}
+\label{subsec:related_aes}
 
 AES \cite{NISTAES} is based on a substitution-permutation network whose inner
 operations --- SubBytes (an S-box lookup over $\text{GF}(2^8)$) and MixColumns
 (matrix multiplication over $\text{GF}(2^8)$) --- map naturally onto
-combinational hardware. Cui and Balasch \cite{Cui2023MaskingAES} demonstrate this
-concretely in the context of masked AES, introducing constant-time finite-field
-instructions that simultaneously improve performance and resistance to side-channel
-attacks. Their result is especially relevant here because it shows that a small
-number of carefully scoped ISA extensions --- rather than a monolithic AES
-coprocessor --- can yield substantial gains while preserving software flexibility.
+combinational hardware.
+Cui and Balasch \cite{Cui2023MaskingAES} demonstrate this concretely in the context
+of masked AES, introducing constant-time finite-field instructions that simultaneously
+improve performance and resistance to side-channel attacks.
+Their result is particularly relevant here because it shows that a small number of
+carefully scoped ISA extensions --- rather than a monolithic AES coprocessor --- can
+yield substantial gains while preserving software flexibility.
 
-Primas et al. \cite{Primas2024NLUV} take a related approach with the NLU-V
+Primas et al.\ \cite{Primas2024NLUV} take a related approach with the NLU-V
 extension, fusing S-box substitution and linear diffusion into a single hardware
-block to minimise intermediate data movement for both AES and PRESENT. Both
-works support the design choice made in Chapter~4 to expose $\text{GF}(2^8)$
-arithmetic as a primitive CXU instruction rather than implementing a full AES round.
+block to minimise intermediate data movement for both AES and PRESENT.
+Both works support the design choice made in Chapter~\ref{ch:proposed_solution}
+to expose $\text{GF}(2^8)$ arithmetic as a primitive CXU instruction rather than
+implementing a full AES round in hardware.
 
 \subsection{Post-Quantum Cryptography}
+\label{subsec:related_pqc}
 
-Classical public-key cryptosystems are vulnerable to Shor's algorithm on
-sufficiently powerful quantum computers, motivating the NIST post-quantum
-standardisation effort \cite{Vranken2023UniformMul, Levi2020RISQV}. Lattice-based
-schemes such as CRYSTALS-Kyber and NewHope rely on polynomial arithmetic,
+Classical public-key cryptosystems are vulnerable to Shor's algorithm on sufficiently
+powerful quantum computers, motivating the NIST post-quantum standardisation effort
+\cite{Vranken2023UniformMul, Levi2020RISQV}.
+Lattice-based schemes such as CRYSTALS-Kyber and NewHope rely on polynomial arithmetic,
 particularly the Number Theoretic Transform (NTT), whose butterfly operations and
 modular reductions are expensive on a standard ALU.
 
-Sozbilir et al. \cite{Sozbilir2020Kyber} prototype NTT-specific ISA extensions on
+Sozbilir et al.\ \cite{Sozbilir2020Kyber} prototype NTT-specific ISA extensions on
 VexRiscv and report up to an 85\% speedup for Kyber and NewHope, demonstrating
-that the class of processor used in this work is a viable target for PQC
-acceleration. Levi et al. \cite{Levi2020RISQV} extend this further with
-RISQ-V, a set of 29 tightly coupled custom instructions achieving a 9.6$\times$
-speedup for Kyber. Franchetti et al. \cite{Franchetti2024MultiWord} address the
-related problem of multi-word carry-propagation arithmetic required by classical
-public-key schemes, using a coprocessor interface structurally similar to the CXU.
-Vranken et al. \cite{Vranken2023UniformMul} argue for a uniform set of
+that the class of processor used in this work is a viable target for post-quantum
+acceleration.
+Levi et al.\ \cite{Levi2020RISQV} extend this further with RISQ-V, achieving a
+$9.6\times$ speedup for Kyber using 29 tightly coupled custom instructions.
+Vranken et al.\ \cite{Vranken2023UniformMul} argue for a uniform set of
 multiply-accumulate and modular-reduction primitives capable of serving both
-classical and post-quantum schemes, which foreshadows the approach taken for the
-MAC extension in Chapter~5.
-
-These works collectively motivate extending the CXU Playground to post-quantum
-workloads as a natural direction for future work.
+classical and post-quantum schemes, which directly foreshadows the approach taken
+for the MAC extension described in Section~\ref{sec:case_studies}.
+These results collectively motivate extending the CXU Playground to post-quantum
+workloads as a natural direction for future work, discussed further in
+Section~\ref{sec:future_work}.
 
 \subsection{Hashing}
+\label{subsec:related_hashing}
 
-Alawadi et al. \cite{Alawadi2025SHA3} implement the full Keccak-f permutation as a
-single custom RISC-V instruction, reporting substantial reductions in instruction
-count and cycle time for SHA-3. Their area-performance trade-off analysis provides a
-useful reference for understanding the cost of integrating high-complexity primitives
-into the CXU.
+Alawadi et al.\ \cite{Alawadi2025SHA3} implement the full Keccak-f permutation as a
+single custom RISC-V instruction, reporting substantial reductions in instruction count
+and cycle time for SHA-3.
+Their area-performance trade-off analysis provides a useful reference for understanding
+the cost of integrating high-complexity primitives into the CXU pipeline.
 
 \subsection{Data Compression}
+\label{subsec:related_compression}
 
 GZIP/DEFLATE combines LZ77 back-reference encoding with Huffman entropy coding
-\cite{DEFLATESpec}. The performance bottleneck lies in the inner decompression loop,
-which requires repeated bit-field extractions, variable-width mask generation, and
-modular address arithmetic --- all operations that reduce to a handful of hardware
-gates but require several ALU instructions in software. The custom instructions
-designed in Section~3.9 and evaluated in Chapter~5 target exactly this hot path.
-To our knowledge, no prior work has applied the CXU or CFU mechanism to GZIP
-acceleration, making this a novel case study.
+\cite{DEFLATESpec}.
+The performance bottleneck in decompression lies in the inner loop, which requires
+repeated bit-field extractions, variable-width mask generation, and modular address
+arithmetic --- all operations that reduce to a handful of hardware gates but require
+several ALU instructions in software.
+The custom instructions designed in Section~\ref{subsec:deflate_cxu} and evaluated
+in Chapter~\ref{ch:experiments_results} target exactly this hot path.
+To the best of the authors' knowledge, no prior work has applied the CXU or CFU
+mechanism to GZIP acceleration, making this a novel case study.
 
 \subsection{Machine Learning Inference}
+\label{subsec:related_ml}
 
-Neural network inference on microcontrollers is dominated by Multiply-Accumulate
-(MAC) operations in convolutional and fully connected layers. TensorFlow Lite Micro
-\cite{David2021TFLiteMicro} provides portable INT8-quantised inference kernels for
-this class of device. The CMSIS-NN library \cite{Lai2018CMSISNN} shows that ARM DSP
-SIMD MAC instructions yield up to a 4.6$\times$ improvement over scalar code; the
-PULP platform \cite{PULP2015} achieves comparable gains on RISC-V with
-hardware-loop and dot-product extensions. The MAC extension evaluated in
-Chapter~5 follows the same principle, exposing a fused multiply-accumulate
-operation as a single-cycle CXU instruction.
-
-MiniFloat-NN and ExSdotp \cite{Oliveira2022MiniFloat} push this further with
-float8 dot-product accumulation for low-precision training, demonstrating that the
-same CXU-style integration pattern scales to more exotic arithmetic formats.
+Neural network inference on microcontrollers is dominated by Multiply-Accumulate (MAC)
+operations in convolutional and fully connected layers.
+TensorFlow Lite Micro \cite{David2021TFLiteMicro} provides portable INT8-quantised
+inference kernels for this class of device.
+The CMSIS-NN library \cite{Lai2018CMSISNN} shows that ARM DSP SIMD MAC instructions
+yield up to a $4.6\times$ improvement over scalar code; the PULP platform
+\cite{PULP2015} achieves comparable gains on RISC-V with hardware-loop and
+dot-product extensions.
+The MAC extension evaluated in Chapter~\ref{ch:experiments_results} follows the same
+principle, exposing a fused multiply-accumulate operation as a single-cycle CXU
+instruction.
+Oliveira et al.\ \cite{Oliveira2022MiniFloat} push this further with float8
+dot-product accumulation for low-precision training, demonstrating that the same
+CXU-style integration pattern scales to more exotic arithmetic formats.
 
 \subsection{Linux on LiteX}
+\label{subsec:related_linux_litex}
 
-Running benchmarks inside a full operating system is important for obtaining
-performance numbers that reflect real-world deployment conditions rather than
-isolated microbenchmarks. The Linux-on-LiteX-VexRiscv project \cite{LinuxOnLiteXGitHub}
-establishes the feasibility of booting Linux on a soft RISC-V core in a LiteX SoC,
-and documents the required hardware configuration (MMU, atomic instructions,
-supervisor privilege mode). This work adopts the same configuration and extends it
-with CXU hardware.
+Running benchmarks inside a full operating system yields performance numbers that
+reflect real-world deployment conditions rather than isolated microbenchmarks.
+The Linux-on-LiteX-VexRiscv project \cite{LinuxOnLiteXGitHub} establishes the
+feasibility of booting Linux on a soft RISC-V core in a LiteX SoC, and documents
+the required hardware configuration: MMU support, atomic instructions, and supervisor
+privilege mode.
+This work adopts the same configuration and extends it with the CXU hardware,
+as described in Section~\ref{sec:sandbox_env}.
+
+In summary, while prior work has demonstrated the value of custom instructions
+for AES, post-quantum cryptography, hashing, machine learning, and (to a lesser
+extent) compression, none has done so within the CXU framework, and none has
+provided a unified sandbox environment that supports multiple extensions under Linux.
+The present work addresses both gaps simultaneously.

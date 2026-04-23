@@ -1,6 +1,8 @@
 \chapter{Conclusions}
+\label{ch:conclusions}
 
 \section{Summary of Contributions}
+\label{sec:contributions_summary}
 
 This thesis addressed a concrete gap in the RISC-V custom-extension ecosystem: at
 the outset, the Composable eXtension Unit (CXU) specification existed as a design
@@ -37,8 +39,9 @@ designed, implemented, and validated as part of this work:
 \end{itemize}
 
 \section{Key Results}
+\label{sec:key_results}
 
-\textbf{AES acceleration} produced the most dramatic result. Offloading SubBytes
+\textbf{AES acceleration} yielded the most significant performance improvement. Offloading SubBytes
 and MixColumns arithmetic to a single-cycle combinational CXU instruction reduced
 cycles per encrypted byte from approximately 2{,}670 to approximately 506, a
 consistent \textbf{5.25$\times$ speedup} across all tested input sizes from 128 B
@@ -67,6 +70,7 @@ instructions can yield order-of-magnitude cycle reductions for
 arithmetic-intensive workloads.
 
 \section{Limitations of the Current Implementation}
+\label{sec:limitations_conclusion}
 
 Three limitations of the current implementation are worth highlighting.
 
@@ -89,6 +93,7 @@ runtime library hard-codes extension addresses rather than discovering them
 dynamically through the kernel's device model.
 
 \section{Future Work}
+\label{sec:future_work}
 
 The CXU Playground provides a solid foundation for several directions of future
 work.
@@ -113,7 +118,7 @@ Wishbone-mapped registers, bringing access latency in line with the CXU
 specification's assumptions and enabling stateful extensions to operate efficiently.
 
 \textbf{Post-quantum cryptography} is a natural extension of the case studies in
-Chapter~5. The related work survey in Chapter~2 documents speedups of up to
+Chapter~\ref{ch:experiments_results}. The related work survey in Chapter~\ref{ch:related_work} documents speedups of up to
 9.6$\times$ for CRYSTALS-Kyber using tightly coupled custom instructions
 \cite{Levi2020RISQV}. Implementing NTT butterfly and modular reduction operations
 as CXU extensions, and measuring them within the Playground, would both validate
@@ -134,6 +139,7 @@ of the area-performance trade-off and would make the Playground's benchmark resu
 directly comparable to FPGA-based results in the related-work literature.
 
 \section{Closing Remarks}
+\label{sec:closing}
 
 The CXU Playground demonstrates that a full-stack, Linux-capable sandbox for
 composable RISC-V custom extensions is practically achievable on commodity FPGA

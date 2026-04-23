@@ -1,13 +1,14 @@
 \chapter{Experiments and Results}
 \label{ch:experiments_results}
 
-This chapter describes the features implemented for the environment
-developed in this work, as well as describes and explores the experiments
-done to verify the effectiveness of the extension interface. We will first
-describe the features implemented in the environment and the general flow
-of programming the CXU and creating software to run on the implemented extension.
+This chapter details the implemented components of the CXU
+Playground and presents the experimental methodology used
+to evaluate the custom extensions.
+\autoref{sec:cxu_playground_impl} outlines the hardware and software
+environment, followed by benchmarking results and an analysis of observed limitations.
 
 \section{The CXU Playground}
+\label{sec:cxu_playground_impl}
 
 The CXU playground is the main interface for this work. As described in Chapter 4,
 the playground consists of multiple parts, mainly the modified CPU with the CXU
@@ -26,6 +27,7 @@ Here is the list of items that were integrated and tested with the CXU Playgroun
 \end{itemize}
 
 \subsection{The CXU interface modification}
+\label{subsec:cxu_iface_mod}
 The VexiiRiscv core was modified to include the Composable eXtension Unit (CXU) interface
 plugin. This involved mapping the custom instructions to the execute stage of the pipeline,
 ensuring that the `cxidx` and `cxdata` CSRs are accessible by the hardware logic. The
@@ -33,12 +35,14 @@ modification allows the CPU to stall when the CXU is performing a multi-cycle op
 maintaining synchronous execution flow.
 
 \subsection{The LiteX SoC development environment}
+\label{subsec:litex_dev_env}
 Using the LiteX framework, a system-on-chip was built around the modified VexiiRiscv. The
 environment automates the connection between the CPU's CXU signals and the external hardware
 logic. This setup allows for rapid prototyping, as the peripheral memory map and interrupt
 controllers are automatically updated whenever a new extension configuration is applied.
 
 \subsection{The environment for bare-metal application development}
+\label{subsec:baremetal_env}
 A sandbox was created to allow developers to write C code that interacts directly with the CXU.
 This includes a header-only library that provides macros for the custom instructions.
 The bare-metal environment bypasses the complexities of an OS,
@@ -46,6 +50,7 @@ allowing for cycle-accurate measurement of the extension's performance using the
 mcycle and minstret counters.
 
 \subsection{The AES implementation}
+\label{subsec:aes_impl}
 The AES extension focuses on accelerating the SubBytes and MixColumns transformations.
 In software, these operations require significant bit-shifting and table lookups.
 The hardware implementation uses the optimized GF$(2^8)$ operations implemented on the CXU.
@@ -53,12 +58,14 @@ These operations are now done in a single cycle, significantly reducing the inst
 the inner loops of the AES algorithm.
 
 \subsection{The GZIP implementation}
+\label{subsec:gzip_impl}
 The GZIP extension targets the DEFLATE algorithm, specifically the CRC-32 calculation
 and bit-shuffling required for Huffman coding. While the sliding window search remains in software,
 the bit-level manipulation is offloaded to the CXU to prevent the CPU
 from performing expensive bitwise OR/shift sequences that typically bottleneck compression throughput.
 
 \subsection{TensorFlow Lite Micro MAC speedup}
+\label{subsec:tflite_impl}
 
 To measure the performance benefits of the CXU MAC extension,
 a standard TensorFlow Lite Micro benchmarking application was
@@ -71,13 +78,15 @@ The execution latency was measured for both the baseline software implementation
 (using standard RV32IM instructions) and the CXU-accelerated implementation.
 
 \section{Experiments and Benchmarks}
+\label{sec:benchmarks}
 
 The primary goal of the benchmarks was to evaluate the reduction in clock cycles and power-efficient
 execution by comparing the software-only implementation against the CXU-accelerated version.
 
 \subsection{AES $GF(2^8)$ extension and software comparison}
+\label{subsec:aes_results}
 The AES benchmark was performed on a 128-bit block encryption task.
-The results demonstrate a drastic reduction in total cycles.
+The results demonstrate a significant reduction in total cycles.
 
 \begin{table}[htb]
 \centering
@@ -113,6 +122,7 @@ The results demonstrate a drastic reduction in total cycles.
 ]{\dataSW}
 
 \caption{Runtime comparison of AES runtime for different buffer sizes}
+\label{tab:aes_cycles}
 \end{table}
 
 \begin{table}[htb]
@@ -149,6 +159,7 @@ The results demonstrate a drastic reduction in total cycles.
 ]{\dataSW}
 
 \caption{Throughput comparison of AES runtime for different buffer sizes}
+\label{tab:aes_throughput}
 \end{table}
 
 As shown in the tables, the hardware acceleration achieved a
@@ -156,6 +167,7 @@ speedup of approximately 5 times. This is attributed to the elimination of compu
 GF$(2^8)$ operations.
 
 \subsection{GZIP extension and software implementation}
+\label{subsec:gzip_results}
 The GZIP experiments were conducted within the Linux environment generated by Buildroot.
 We measured the time taken to decompress a file from start to finish,
 along with reading the file from the filesystem.
@@ -203,15 +215,15 @@ table[
 
 \end{tikzpicture}
 \caption{Runtime comparison of GZIP runtime for different file sizes}
+\label{fig:gzip_runtime}
 \end{figure}
 
-The data in the plot indicates that while the overall speedup is less
-dramatic than AES (due to the I/O overhead in Linux),
-the CPU utilization for bit-stream packing decreased by approximately 10\%.
+The data in the plot indicates that while the overall speedup is more
+modest than AES (due to the I/O overhead in Linux),
+the CPU time for bit-stream packing decreased by approximately 10\%.
 
 \subsection{TensorFlow MAC extension}
-
-Only a placeholder table right here for now.
+\label{subsec:tflite_results}
 
 \begin{table}[htb]
 \centering
@@ -249,8 +261,10 @@ Only a placeholder table right here for now.
 \end{table}
 
 \section{Unimplemented Features and Known Limitations}
+\label{sec:limitations}
 
 \subsection{CXU Capabilities in the Linux Device Tree}
+\label{subsec:lim_dts}
 
 The Linux kernel currently has no visibility into the available CXU extensions at
 boot time. Extension base addresses are hard-coded into the runtime library rather
@@ -260,6 +274,7 @@ operand widths, and memory-access permissions), allowing the kernel to allocate
 resources and expose extensions through a standard device interface.
 
 \subsection{Clock Frequency Limitations}
+\label{subsec:lim_clock}
 
 The maximum clock frequency of the SoC is constrained by the critical path through
 the Wishbone interconnect and the CXU combinational logic when targeting
@@ -269,6 +284,7 @@ This trade-off should be characterised per extension as part of the development
 workflow.
 
 \subsection{Multi-Process CXU Access and Kernel Driver}
+\label{subsec:lim_multiprocess}
 
 The current userspace interface relies on a lightweight UIO (Userspace I/O) driver,
 which provides no protection against concurrent access from multiple processes and
