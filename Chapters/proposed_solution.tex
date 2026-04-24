@@ -18,7 +18,7 @@ As established in Chapter~\ref{ch:related_work}, however, no hardware implementa
 of the CXU interface existed prior to this work, and no sandbox environment supported
 its features.
 
-The main focus of this work is implementing a concrete implementation of the CXU interface
+The main focus of this work is therefore a concrete implementation of the CXU interface
 along with a playground for prototyping and development of custom CXU extensions.
 A dedicated sandbox environment reduces the development time
 required to test specialized hardware accelerators,
@@ -232,7 +232,8 @@ hardware performance counters and standard Linux profiling tools to compare the
 execution time of the software reference implementation against the CXU-accelerated
 version.
 For each extension, both variants were compiled for the RV32IMAFC target using the same
-cross-compilation toolchain and optimisation flags, ensuring a fair comparison.
+cross-compilation toolchain and optimisation flags --- \texttt{-O2} for bare-metal
+targets and \texttt{-O3} within the Buildroot Linux environment --- ensuring a fair comparison.
 Execution time was measured at multiple input sizes to assess scalability and to
 distinguish fixed invocation overhead from per-byte computation savings.
 
