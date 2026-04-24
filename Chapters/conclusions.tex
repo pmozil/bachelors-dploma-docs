@@ -98,39 +98,38 @@ dynamically through the kernel's device model.
 The CXU Playground provides a solid foundation for several directions of future
 work.
 
-\textbf{Kernel context-switch support} is the most pressing correctness gap. The
+Kernel context-switch support is the most pressing correctness gap. The
 CXU specification defines the required save/restore semantics; implementing them
 requires adding \texttt{cxidx}/\texttt{cxdata} to the task struct and instrumenting
 the scheduler's context-switch path. This work would make the playground safe for
 multi-process workloads and would complete the OS-facing portion of the CXU
 specification.
 
-\textbf{Device Tree integration} should follow naturally: extending the LiteX SoC
+Multi-processs benchmarks on linux are a logical extension of the benchmarks
+done in \autoref{subsec:gzip_impl}. Testing CXU and IO contention, as well
+as how IO and CXU compute may contend or compensate each other is an important
+topic we have not yet managed to cover in this work.
+
+Device Tree integration should follow naturally: extending the LiteX SoC
 generator to emit DTS nodes describing available extensions (index range, state
 width, memory-access permissions) would allow a kernel driver to enumerate and
 manage extensions through the standard Linux device model, and would enable
 future hardware/software co-design tools to query the platform capabilities
 programmatically.
 
-\textbf{CSR latency reduction} could be addressed by implementing \texttt{cxidx}
+CSR latency reduction could be addressed by implementing \texttt{cxidx}
 and \texttt{cxdata} as native VexiiRiscv pipeline registers rather than
 Wishbone-mapped registers, bringing access latency in line with the CXU
 specification's assumptions and enabling stateful extensions to operate efficiently.
 
-\textbf{Post-quantum cryptography} is a natural extension of the case studies in
-Chapter~\ref{ch:experiments_results}. The related work survey in Chapter~\ref{ch:related_work} documents speedups of up to
+Post-quantum cryptography is a natural extension of the case studies in
+\autoref{ch:experiments_results}. The related work survey in \autoref{ch:related_work} documents speedups of up to
 9.6$\times$ for CRYSTALS-Kyber using tightly coupled custom instructions
 \cite{Levi2020RISQV}. Implementing NTT butterfly and modular reduction operations
 as CXU extensions, and measuring them within the Playground, would both validate
 the framework for a security-critical workload and produce results directly
 comparable to RISQ-V and similar prior work.
 
-\textbf{Cross-core portability} --- porting the CXU plugin to a second RV32
-implementation such as CVA6 or the SERV core --- would validate the original
-premise of the composable-extensions family: that a single extension implementation
-can be reused across different processor microarchitectures. This would also test
-whether the SpinalHDL plugin abstraction is genuinely separable from VexiiRiscv's
-internals.
 
 \section{Closing Remarks}
 \label{sec:closing}
