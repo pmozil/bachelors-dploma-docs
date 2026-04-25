@@ -186,6 +186,77 @@ As a consequence, the current system is safe only for single-process CXU workloa
 under Linux; the multi-process correctness gap is discussed as a limitation in
 Section~\ref{subsec:lim_multiprocess}.
 
+\section{The CXU Playground}
+\label{sec:cxu_playground_impl}
+
+The CXU Playground is the central development environment produced by this work.
+As described in Chapter~\ref{ch:proposed_solution}, it consists of the modified
+VexiiRiscv CPU with the CXU interface, the LiteX SoC generation environment, the
+Buildroot Linux image, and the CXU runtime library.
+The following components were integrated and validated:
+
+\begin{itemize}
+    \item The modified VexiiRiscv CPU with the CXU extension.
+    \item The LiteX environment and a script that generates the Verilog code for the SoC.
+    \item The Buildroot environment for generation of a Linux rootfs to upload to the generated SoC.
+    \item A series of basic bare-metal software applications, as well as a template for development of bare-metal programs.
+    \item A bare-metal AES software implementation and a CXU extension to compare the speedup on bare-metal.
+    \item A modified Gnu Zip (GZIP) application along with the CXU extension to test speedup on Linux applications.
+\end{itemize}
+
+\subsection{The CXU interface modification}
+\label{subsec:cxu_iface_mod}
+The VexiiRiscv core was modified to include the Composable eXtension Unit (CXU) interface
+plugin. This involved mapping the custom instructions to the execute stage of the pipeline,
+ensuring that the `cxidx` and `cxdata` CSRs are accessible by the hardware logic. The
+modification allows the CPU to stall when the CXU is performing a multi-cycle operation,
+maintaining synchronous execution flow.
+
+\subsection{The LiteX SoC development environment}
+\label{subsec:litex_dev_env}
+Using the LiteX framework, a system-on-chip was built around the modified VexiiRiscv. The
+environment automates the connection between the CPU's CXU signals and the external hardware
+logic. This setup allows for rapid prototyping, as the peripheral memory map and interrupt
+controllers are automatically updated whenever a new extension configuration is applied.
+
+\subsection{The environment for bare-metal application development}
+\label{subsec:baremetal_env}
+A sandbox was created to allow developers to write C code that interacts directly with the CXU.
+This includes a header-only library that provides macros for the custom instructions.
+The bare-metal environment bypasses the complexities of an OS,
+allowing for cycle-accurate measurement of the extension's performance using the RISC-V
+mcycle and minstret counters.
+
+\subsection{The AES implementation}
+\label{subsec:aes_impl}
+The AES extension focuses on accelerating the SubBytes and MixColumns transformations.
+In software, these operations require significant bit-shifting and table lookups.
+The hardware implementation uses the optimized GF$(2^8)$ operations implemented on the CXU.
+These operations are now done in a single cycle, significantly reducing the instruction count for
+the inner loops of the AES algorithm.
+
+\subsection{The GZIP implementation}
+\label{subsec:gzip_impl}
+The GZIP extension targets the DEFLATE algorithm, specifically the CRC-32 calculation
+and bit-shuffling required for Huffman coding. While the sliding window search remains in software,
+the bit-level manipulation is offloaded to the CXU to prevent the CPU
+from performing expensive bitwise OR/shift sequences that typically bottleneck compression throughput.
+
+\subsection{TensorFlow Lite Micro MAC speedup}
+\label{subsec:tflite_impl}
+
+To measure the performance benefits of the CXU MAC extension,
+a standard TensorFlow Lite Micro benchmarking application was
+executed within the generated Buildroot Linux environment.
+Only one type of layer, a linear fully connected layer, was tested for speedup.
+
+The benchmark utilized a quantized model
+(e.g., the Person Detection or Micro Speech keyword spotting model)
+commonly used to evaluate TinyML performance.
+
+The execution latency was measured for both the baseline software implementation
+(using standard RV32IM instructions) and the CXU-accelerated implementation.
+
 \section{Validation through Case Studies}
 \label{sec:case_studies}
 
@@ -253,10 +324,12 @@ The results of this analysis are presented in Chapter~\ref{ch:experiments_result
 
 Several limitations of the current implementation affect the practical utility of
 certain CXU features and must be taken into account when interpreting the benchmarking
-results; they are described here and examined in detail in
-Section~\ref{sec:limitations}.
+results.
 
-The first and most significant limitation concerns the \textbf{cxidx}/\textbf{cxdata}
+\subsection{CXU CSR state IO /switch latency}
+\label{subsec:cxu_csr_latency}
+
+The most significant limitation concerns the \textbf{cxidx}/\textbf{cxdata}
 CSRs.
 In the LiteX SoC implementation, these registers are accessed through memory-mapped I/O
 over the Wishbone bus rather than as native pipeline registers.
@@ -267,7 +340,7 @@ In practice, the shared-state mechanism in this implementation is best treated a
 one-time configuration interface, and extensions should be designed to minimise
 intermediate state transfers through CSRs.
 
-The second limitation concerns extension switching.
+Another limitation concerns extension switching.
 Because selecting the active extension requires a \textbf{cxidx} CSR write, each
 switch between extensions incurs the same bus-transaction latency.
 Software should therefore be structured to batch all invocations of a given extension
@@ -280,3 +353,33 @@ invocation, require minimal shared state transfers, and maintain a single active
 extension for extended periods.
 The benchmarks presented in Chapter~\ref{ch:experiments_results} were designed with
 these constraints in mind.
+
+\subsection{CXU Capabilities in the Linux Device Tree}
+\label{subsec:lim_dts}
+
+The Linux kernel currently has no visibility into the available CXU extensions at
+boot time. Extension base addresses are hard-coded into the runtime library rather
+than discovered dynamically. A more robust implementation would extend the LiteX
+SoC generator to emit DTS nodes describing the CXU capabilities (index range,
+operand widths, and memory-access permissions), allowing the kernel to allocate
+resources and expose extensions through a standard device interface.
+
+\subsection{Clock Frequency Limitations}
+\label{subsec:lim_clock}
+
+The maximum clock frequency of the SoC is constrained by the critical path through
+the Wishbone interconnect and the CXU combinational logic when targeting
+entry-level FPGA boards. Deep combinational extensions can lower the synthesis
+Fmax, requiring either pipeline registers inside the CXU or a lower system clock.
+This trade-off should be characterised per extension as part of the development
+workflow.
+
+\subsection{Multi-Process CXU Access and Kernel Driver}
+\label{subsec:lim_multiprocess}
+
+The current userspace interface relies on a lightweight UIO (Userspace I/O) driver,
+which provides no protection against concurrent access from multiple processes and
+does not save or restore CXU state during context switches. A proper kernel-level
+driver is required to handle mutual exclusion and to integrate CXU state
+save/restore into the task-switch path. Without this, running CXU-accelerated
+applications in a preemptive multi-process workload risks state corruption.

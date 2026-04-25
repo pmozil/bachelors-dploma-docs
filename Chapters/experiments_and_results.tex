@@ -6,75 +6,6 @@ implemented in the CXU Playground.
 \autoref{sec:cxu_playground_impl} gives a brief account of each implemented component,
 followed by the benchmarking results and an analysis of observed performance and limitations.
 
-\section{The CXU Playground}
-\label{sec:cxu_playground_impl}
-
-The CXU Playground is the central development environment produced by this work.
-As described in Chapter~\ref{ch:proposed_solution}, it consists of the modified
-VexiiRiscv CPU with the CXU interface, the LiteX SoC generation environment, the
-Buildroot Linux image, and the CXU runtime library.
-The following components were integrated and validated:
-
-\begin{itemize}
-    \item The modified VexiiRiscv CPU with the CXU extension.
-    \item The LiteX environment and a script that generates the Verilog code for the SoC.
-    \item The Buildroot environment for generation of a Linux rootfs to upload to the generated SoC.
-    \item A series of basic bare-metal software applications, as well as a template for development of bare-metal programs.
-    \item A bare-metal AES software implementation and a CXU extension to compare the speedup on bare-metal.
-    \item A modified Gnu Zip (GZIP) application along with the CXU extension to test speedup on Linux applications.
-\end{itemize}
-
-\subsection{The CXU interface modification}
-\label{subsec:cxu_iface_mod}
-The VexiiRiscv core was modified to include the Composable eXtension Unit (CXU) interface
-plugin. This involved mapping the custom instructions to the execute stage of the pipeline,
-ensuring that the `cxidx` and `cxdata` CSRs are accessible by the hardware logic. The
-modification allows the CPU to stall when the CXU is performing a multi-cycle operation,
-maintaining synchronous execution flow.
-
-\subsection{The LiteX SoC development environment}
-\label{subsec:litex_dev_env}
-Using the LiteX framework, a system-on-chip was built around the modified VexiiRiscv. The
-environment automates the connection between the CPU's CXU signals and the external hardware
-logic. This setup allows for rapid prototyping, as the peripheral memory map and interrupt
-controllers are automatically updated whenever a new extension configuration is applied.
-
-\subsection{The environment for bare-metal application development}
-\label{subsec:baremetal_env}
-A sandbox was created to allow developers to write C code that interacts directly with the CXU.
-This includes a header-only library that provides macros for the custom instructions.
-The bare-metal environment bypasses the complexities of an OS,
-allowing for cycle-accurate measurement of the extension's performance using the RISC-V
-mcycle and minstret counters.
-
-\subsection{The AES implementation}
-\label{subsec:aes_impl}
-The AES extension focuses on accelerating the SubBytes and MixColumns transformations.
-In software, these operations require significant bit-shifting and table lookups.
-The hardware implementation uses the optimized GF$(2^8)$ operations implemented on the CXU.
-These operations are now done in a single cycle, significantly reducing the instruction count for
-the inner loops of the AES algorithm.
-
-\subsection{The GZIP implementation}
-\label{subsec:gzip_impl}
-The GZIP extension targets the DEFLATE algorithm, specifically the CRC-32 calculation
-and bit-shuffling required for Huffman coding. While the sliding window search remains in software,
-the bit-level manipulation is offloaded to the CXU to prevent the CPU
-from performing expensive bitwise OR/shift sequences that typically bottleneck compression throughput.
-
-\subsection{TensorFlow Lite Micro MAC speedup}
-\label{subsec:tflite_impl}
-
-To measure the performance benefits of the CXU MAC extension,
-a standard TensorFlow Lite Micro benchmarking application was
-executed within the generated Buildroot Linux environment.
-
-The benchmark utilized a quantized model (e.g., the Person Detection or Micro Speech keyword spotting model)
-commonly used to evaluate TinyML performance.
-
-The execution latency was measured for both the baseline software implementation
-(using standard RV32IM instructions) and the CXU-accelerated implementation.
-
 \section{Experiments and Benchmarks}
 \label{sec:benchmarks}
 
@@ -160,7 +91,8 @@ The results demonstrate a substantial reduction in total cycles.
 \label{tab:aes_throughput}
 \end{table}
 
-As shown in the tables, the hardware acceleration achieves a consistent speedup of
+As shown in the tables \ref{tab:aes_throughput} and \ref{tab:aes_cycles},
+the hardware acceleration achieves a consistent speedup of
 approximately 5.25$\times$ across all buffer sizes from 128\,B to 16{,}768\,B,
 reducing cycles per encrypted byte from roughly 2{,}670 to roughly 506.
 The gain is directly attributable to the inner-loop transformation: in the
@@ -179,7 +111,7 @@ AES using the NLU-V extension on an RV32I core, which fuses the SubBytes and
 MixColumns layers into a composite instruction; the CXU approach here targets the
 finer-grained GF$(2^8)$ primitive, yielding a comparable cycle reduction with a
 simpler hardware interface.
-Marshall et al.\ report a 4$\times$ speedup for AES-128 on a comparable 32-bit
+Marshall et al. report a 4$\times$ speedup for AES-128 on a comparable 32-bit
 RISC-V core using scalar ISEs~\cite{Marshall2020AES}, rising to 10$\times$ on 64-bit
 targets where state packing is more efficient; the CXU result of 5.25$\times$ on RV32
 falls within this established range.
@@ -238,7 +170,7 @@ table[
 \label{fig:gzip_runtime}
 \end{figure}
 
-The data in the plot indicates that while the overall speedup is more modest than AES,
+The data in \autoref{fig:gzip_runtime} indicates that while the overall speedup is more modest than AES,
 the CPU time for bit-stream manipulation decreased by approximately 10\%.
 The smaller end-to-end gain reflects two structural factors: the LZ77 sliding-window
 search --- a substantial fraction of total decompression work --- is not accelerated
@@ -287,35 +219,12 @@ overhead within those primitives.
 \label{tab:tflite_results}
 \end{table}
 
-\section{Unimplemented Features and Known Limitations}
-\label{sec:limitations}
+\autoref{tab:tflite_results} confirms that, unless the CXU is also
+connected to memory or other IO modules, the gain is more evident
+on compute-heavy tasks. Unlinke the GZIP case, the CXU extension
+covers a substantiall part of the functionality of the benchmark,
+yet it results only in a 13--15\% speedup.
 
-\subsection{CXU Capabilities in the Linux Device Tree}
-\label{subsec:lim_dts}
-
-The Linux kernel currently has no visibility into the available CXU extensions at
-boot time. Extension base addresses are hard-coded into the runtime library rather
-than discovered dynamically. A more robust implementation would extend the LiteX
-SoC generator to emit DTS nodes describing the CXU capabilities (index range,
-operand widths, and memory-access permissions), allowing the kernel to allocate
-resources and expose extensions through a standard device interface.
-
-\subsection{Clock Frequency Limitations}
-\label{subsec:lim_clock}
-
-The maximum clock frequency of the SoC is constrained by the critical path through
-the Wishbone interconnect and the CXU combinational logic when targeting
-entry-level FPGA boards. Deep combinational extensions can lower the synthesis
-Fmax, requiring either pipeline registers inside the CXU or a lower system clock.
-This trade-off should be characterised per extension as part of the development
-workflow.
-
-\subsection{Multi-Process CXU Access and Kernel Driver}
-\label{subsec:lim_multiprocess}
-
-The current userspace interface relies on a lightweight UIO (Userspace I/O) driver,
-which provides no protection against concurrent access from multiple processes and
-does not save or restore CXU state during context switches. A proper kernel-level
-driver is required to handle mutual exclusion and to integrate CXU state
-save/restore into the task-switch path. Without this, running CXU-accelerated
-applications in a preemptive multi-process workload risks state corruption.
+This further prooves that, unless a CXU module has access to the main RAM
+or handles IO in some other way, it would be limited by how compute-heavy
+a task is.

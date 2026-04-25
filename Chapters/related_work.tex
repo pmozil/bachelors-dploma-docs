@@ -289,7 +289,7 @@ Chapter~\ref{ch:experiments_results}.
 \label{subsec:related_aes}
 
 AES \cite{NISTAES} is based on a substitution-permutation network whose inner
-operations --- SubBytes (an S-box lookup over $\text{GF}(2^8)$) and MixColumns
+operations: SubBytes (an S-box lookup over $\text{GF}(2^8)$) and MixColumns
 (matrix multiplication over $\text{GF}(2^8)$) --- map naturally onto
 combinational hardware.
 Cui and Balasch \cite{Cui2023MaskingAES} demonstrate this concretely in the context
@@ -383,7 +383,7 @@ privilege mode.
 This work adopts the same configuration and extends it with the CXU hardware,
 as described in Section~\ref{sec:sandbox_env}.
 
-In summary, while prior work has demonstrated the value of custom instructions
+While prior work has demonstrated the value of custom instructions
 for AES, post-quantum cryptography, hashing, machine learning, and (to a lesser
 extent) compression, none has done so within the CXU framework, and none has
 provided a unified sandbox environment that supports multiple extensions under Linux.
