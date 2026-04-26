@@ -4,17 +4,18 @@
 \section{Problem Statement}
 \label{sec:problem_statement}
 
+% O.F. Трохи є повторів з попереднім, але,  принципі, хай буде...
 The RISC-V ISA is designed with the explicit intent of supporting custom extensions,
 allowing developers to optimise processors for specific workloads.
 In practice, however, the process of designing, integrating, and evaluating custom
 instructions remains highly complex and implementation-specific.
-The CFU specification \cite{Gray2022CFU} addressed reusability across cores, but its
+The CFU specification~\cite{Gray2022CFU} addressed reusability across cores, but its
 single-extension-per-thread model and assembly-only invocation made it impractical for
 more demanding use cases.
-The CXU specification \cite{Gray2025CXU} was proposed to resolve these issues, offering
+The CXU specification~\cite{Gray2025CXU} was proposed to resolve these issues, offering
 support for multiple simultaneous extensions, shared state, and C-level invocation via
-a standardised ABI.
-As established in Chapter~\ref{ch:related_work}, however, no hardware implementation
+a standardized ABI. 
+As established in Chapter~\ref{ch:related_work}, however, to the best of our knowledge, no hardware implementation
 of the CXU interface existed prior to this work, and no sandbox environment supported
 its features.
 
@@ -35,7 +36,8 @@ coprocessors within an embedded system.
 \section{System Architecture and Playground Design}
 \label{sec:system_arch}
 
-The CXU Playground is built on the LiteX framework \cite{LiteXGitHub}, which was
+% O.F. Знову повтори... Можливо, щось з цього мало б перекочувати у попередній розділ -- теорії
+The CXU Playground is built on the LiteX framework~\cite{LiteXGitHub}, which was
 selected for the same reason it underpins the CFU Playground: it abstracts low-level
 hardware connectivity and provides a unified build system, allowing development effort
 to focus on the CXU integration rather than peripheral assembly.
@@ -46,13 +48,13 @@ Communication between these modules is handled by the Wishbone bus, which provid
 memory-mapped I/O access to all connected components, as described in
 Section~\ref{subsec:interconnect}.
 
-The core processor of the SoC is VexiiRiscv \cite{VexiiRiscVGithub}, configured as an
-RV32IMAFC target and implemented in SpinalHDL.
+The core processor of the SoC is VexiiRiscv~\cite{VexiiRiscVGithub}, configured as an
+RV32IMAFC target and implemented in SpinalHDL. % O.F. Тут на пару букв більше, ніж в попередньому розділі -- може поясніть
 VexiiRiscv's plugin-based architecture allows the CXU extension to be integrated as an
 independent execute-stage plugin without modifying the core pipeline, as discussed in
 Section~\ref{subsec:vexii}.
 
-The entire playground is available as a single open-source repository \cite{CXUPlayground}.
+The entire playground is available as a single open-source repository~\cite{CXUPlayground}.
 The repository is structured to separate hardware generation, software toolchains, and
 user-defined custom extensions, and provides scripts for automating the LiteX SoC build
 process, templates for writing SpinalHDL extensions, and a structured environment for
@@ -75,7 +77,7 @@ CXU's shared state via the dedicated \textbf{cxidx} (Extension Index) and
 \textbf{cxdata} Control/Status Registers (CSRs).
 For multi-cycle operations, the plugin asserts a halt signal to the CPU pipeline,
 managing pipeline stalls and structural hazards to ensure correct execution ordering
-and data integrity.
+and data integrity. % O.F. Мені тут знань бракує -- саме halt signal? Не stall абощо? 
 
 Figure~\ref{fig:cxu_pipeline} illustrates how the CXU plugin sits below the Execute
 stage of the pipeline, receiving operands from Decode and returning results that are
@@ -137,6 +139,7 @@ dynamically mapping the memory layout, hardware peripherals, and --- in future w
 CXU capabilities to the operating system.
 Figure~\ref{fig:cxu_stack} shows the resulting full-system software stack.
 
+% O.F. Через невирівняність картинка, звичайно, страшненька вийшла... Але немає ради, хай вже.
 \begin{figure}[htb]
     \centering
     \begin{tikzpicture}[
@@ -170,11 +173,11 @@ Figure~\ref{fig:cxu_stack} shows the resulting full-system software stack.
 Bringing CXU extensions to an operating system environment requires a software
 interface layer that handles extension selection and, in principle, state preservation
 across context switches.
-When multiple applications running on Linux utilise the CXU, the state of the custom
+When multiple applications running on Linux utilize the CXU, the state of the custom
 hardware unit must be preserved so that a preempted process can resume without
 corruption.
 
-The CXU runtime addresses this through a standardised Application Binary Interface
+The CXU runtime addresses this through a standardized Application Binary Interface
 (ABI) and a header-only C-level library.
 The library wraps the low-level assembly instructions into safe, callable C functions
 and manages the \textbf{cxidx} register to multiplex access to different hardware
@@ -198,9 +201,9 @@ The following components were integrated and validated:
 \begin{itemize}
     \item The modified VexiiRiscv CPU with the CXU extension.
     \item The LiteX environment and a script that generates the Verilog code for the SoC.
-    \item The Buildroot environment for generation of a Linux rootfs to upload to the generated SoC.
+    \item The Buildroot environment for the generation of a Linux rootfs to upload to the generated SoC.
     \item A series of basic bare-metal software applications, as well as a template for development of bare-metal programs.
-    \item A bare-metal AES software implementation and a CXU extension to compare the speedup on bare-metal.
+    \item A bare-metal AES software implementation and a CXU extension to compare the speedup on bare metal.
     \item A modified Gnu Zip (GZIP) application along with the CXU extension to test speedup on Linux applications.
 \end{itemize}
 
@@ -248,7 +251,7 @@ from performing expensive bitwise OR/shift sequences that typically bottleneck c
 To measure the performance benefits of the CXU MAC extension,
 a standard TensorFlow Lite Micro benchmarking application was
 executed within the generated Buildroot Linux environment.
-Only one type of layer, a linear fully connected layer, was tested for speedup.
+Only one type of layer, a linear fully connected layer, was tested for speedup. % O.F. Надайте тут обгрунтування -- ми про це багато дискутували :=) 
 
 The benchmark utilized a quantized model
 (e.g., the Person Detection or Micro Speech keyword spotting model)
@@ -304,7 +307,7 @@ execution time of the software reference implementation against the CXU-accelera
 version.
 For each extension, both variants were compiled for the RV32IMAFC target using the same
 cross-compilation toolchain and optimisation flags --- \texttt{-O2} for bare-metal
-targets and \texttt{-O3} within the Buildroot Linux environment --- ensuring a fair comparison.
+targets and \texttt{-O3} within the Buildroot Linux environment --- ensuring a fair comparison. % O.F. Так, стоп, а чого саме так буде чесно?!
 Execution time was measured at multiple input sizes to assess scalability and to
 distinguish fixed invocation overhead from per-byte computation savings.
 
@@ -337,14 +340,14 @@ Each CSR read or write therefore incurs the full latency of a Wishbone bus trans
 which is substantially higher than the single-cycle register access assumed by the CXU
 specification.
 In practice, the shared-state mechanism in this implementation is best treated as a
-one-time configuration interface, and extensions should be designed to minimise
+one-time configuration interface, and extensions should be designed to minimize
 intermediate state transfers through CSRs.
 
 Another limitation concerns extension switching.
 Because selecting the active extension requires a \textbf{cxidx} CSR write, each
 switch between extensions incurs the same bus-transaction latency.
 Software should therefore be structured to batch all invocations of a given extension
-together before switching to another, minimising the number of \textbf{cxidx} writes
+together before switching to another, minimizing the number of \textbf{cxidx} writes
 relative to productive custom instruction calls.
 
 Together, these two limitations imply that the performance benefits of the CXU
@@ -370,7 +373,8 @@ resources and expose extensions through a standard device interface.
 The maximum clock frequency of the SoC is constrained by the critical path through
 the Wishbone interconnect and the CXU combinational logic when targeting
 entry-level FPGA boards. Deep combinational extensions can lower the synthesis
-Fmax, requiring either pipeline registers inside the CXU or a lower system clock.
+Fmax, requiring either pipeline registers inside the CXU or a lower system clock. 
+% O.F. Щось я попереднє речення взагалі не зрозумів... Думаю, варто переформулювати чи пояснити
 This trade-off should be characterised per extension as part of the development
 workflow.
 
@@ -378,6 +382,7 @@ workflow.
 \label{subsec:lim_multiprocess}
 
 The current userspace interface relies on a lightweight UIO (Userspace I/O) driver,
+% O.F. Додайте тут трохи подробиць про UIO
 which provides no protection against concurrent access from multiple processes and
 does not save or restore CXU state during context switches. A proper kernel-level
 driver is required to handle mutual exclusion and to integrate CXU state
