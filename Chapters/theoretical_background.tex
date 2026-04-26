@@ -162,10 +162,11 @@ This abstraction is essential for interacting with accelerators and managing run
 behavior; in the CXU implementation, the \texttt{cxidx} and \texttt{cxdata} registers
 through which software selects the active extension are CSRs of this kind.
 An important consequence --- discussed as a limitation in
-Section~\ref{sec:limitations} --- is that CSR access incurs a full Wishbone bus
+Section~\ref{sec:limitations_design} --- is that CSR access incurs a full Wishbone bus
 transaction, which is substantially more expensive than the register-file access assumed
 by the CXU specification.
-% O.F. !!! {sec:limitations} -- не знаходить. …ого немаЇ, чи € чогось не розум≥ю?  ≤ там ще десь була в≥дсутн€ м≥тка, але не пам'€таю, чи ц€ ж, чи ≥нша
+% -- O.F. !!! {sec:limitations} -- не знаходить. …ого немаЇ, чи € чогось не розум≥ю?  ≤ там ще десь була в≥дсутн€ м≥тка, але не пам'€таю, чи ц€ ж, чи ≥нша
+% O.F. ѕоф≥ксив, але перев≥рте
 
 \subsection{Memory Management}
 \label{subsec:memory_mgmt}
