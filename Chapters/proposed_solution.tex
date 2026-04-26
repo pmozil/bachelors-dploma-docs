@@ -12,7 +12,7 @@ The CFU specification \cite{Gray2022CFU} addressed reusability across cores, but
 single-extension-per-thread model and assembly-only invocation made it impractical for
 more demanding use cases.
 The CXU specification \cite{Gray2025CXU} was proposed to resolve these issues, offering
-support for multiple simultaneous extensions, shared state, and C-level invocation via
+support for multiple simultaneous extensions, shared state, and higher-level invocation via
 a standardised ABI.
 As established in Chapter~\ref{ch:related_work}, however, no hardware implementation
 of the CXU interface existed prior to this work, and no sandbox environment supported
@@ -153,7 +153,7 @@ Figure~\ref{fig:cxu_stack} shows the resulting full-system software stack.
     \node[box, hw] (hardware) {Hardware: LiteX SoC + VexiiRiscv + CXU Extensions};
     \node[box, fw, above=0cm of hardware] (firmware) {Firmware: OpenSBI \& Device Tree Blob (DTB)};
     \node[box, os, above=0cm of firmware] (linux) {Operating System: Linux Kernel (MMU enabled)};
-    \node[box, rt, above=0cm of linux] (runtime) {CXU Runtime ABI \& C-level Library};
+    \node[box, rt, above=0cm of linux] (runtime) {CXU Runtime ABI \& CXU Library};
     \node[box, usr, above=0cm of runtime] (apps) {User Space Applications (AES, GZIP Benchmarks)};
 
     \node[left=0.8cm of hardware, align=right, font=\itshape] {Kernel Mode};
@@ -175,7 +175,7 @@ hardware unit must be preserved so that a preempted process can resume without
 corruption.
 
 The CXU runtime addresses this through a standardised Application Binary Interface
-(ABI) and a header-only C-level library.
+(ABI) and a header-only library.
 The library wraps the low-level assembly instructions into safe, callable C functions
 and manages the \textbf{cxidx} register to multiplex access to different hardware
 extensions among software threads.

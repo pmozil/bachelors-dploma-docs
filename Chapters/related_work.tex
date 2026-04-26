@@ -45,7 +45,7 @@ Only one extension may be connected per hardware thread, the extension may not a
 memory, and even when programming in a higher-level language the user must invoke a
 \textbf{custom-0|1|2|3} assembly instruction directly \cite{Gray2022CFU}.
 These constraints make the CFU impractical for workloads that require multiple distinct
-accelerators or expect a clean C-level programming model.
+accelerators or expect a clean programming model.
 
 \subsection{CXU}
 \label{subsec:cxu}
@@ -250,11 +250,11 @@ specialised hardware logic and write software to invoke their extensions.
 \node[box, fill=green!10, right=of litex] (hw) {CFU Hardware (RTL)};
 \node[wide, fill=orange!15, below=of litex, xshift=2cm] (fpga) {FPGA Bitstream};
 
-\draw[decorate, decoration={brace, amplitude=6pt}, thick]
+\draw[decorate, decoration={brace, mirror, amplitude=6pt}, thick]
     ([xshift=-2.0cm]user.north west) -- ([xshift=-2.0cm]cfu.south west)
     node[midway, left=8pt, font=\scriptsize] {Software};
-\draw[decorate, decoration={brace, amplitude=6pt}, thick]
-    ([xshift=-2.0cm]litex.north west) -- ([xshift=-2.0cm]fpga.south west)
+\draw[decorate, decoration={brace, mirror,  amplitude=6pt}, thick]
+    ([xshift=-1.54cm]litex.north west) -- ([xshift=-2.0cm]fpga.south west)
     node[midway, left=8pt, font=\scriptsize] {Hardware};
 
 \end{tikzpicture}

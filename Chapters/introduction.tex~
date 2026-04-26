@@ -10,11 +10,10 @@ RISC-V's instruction set architecture is designed with custom extensions in mind
 so designing custom extensions would be a straightforward process.
 It is, however, a difficult task to have a custom extension be part of the RISC-V specification
 (the ratification process involves a big part of the community voting on the details of the specification),
-% O.F. їїїїїїїїїїї ї їїїїїїїїїїїї -- її її її їїїїї її їїїїї?
+% O.F. Інтегрувати в специфікацію -- то Ви що маєте на увазі?
 and even more so to implement an extension for the multitude of RISC-V processor implementations.
 With such issues, and the fact that most FPGA-based SOCs offer plenty of FPGA frabric not used by the SoC itself
-to also implement an extension,
-% O.F. їїї plenty of space  їїїїї їїїїї їїїїїїїїїїїїїїї.
+to also implement an extension, % O.F. Оце plenty of space  певне варто переформулювати.
 in mind, Jan Gray et al. designed the custom composable extensions (CFU) extension~\cite{Gray2022CFU}.
 It allows for an implementation of a specific extension to be used across multiple RISC-V CPUs,
 so as to use the single extension implementation across a multitude of different RISC-V CPUs.
@@ -27,8 +26,8 @@ CFU and write a main script that runs and invokes the implemented extension.
 CFU is a useful interface for implementing a single extension,
 but when combining extensions, especially those
 that may have multiple different functions and utilize the function ID,
-managing them becomes complex and introduces significant software overhead.
-% O.F. їїї їїїїїїїїї ї їїїїї їїїїїїїїї -- ї їїїї їїїїїїїї ї їїїїїїїїїїї
+managing them becomes complex and introduces significant software overhead. 
+% O.F. Тут просилося б трохи подробиць -- в чому проблема з композицією
 Because of that, Gray et al. also designed a newer version of composable
 custom extensions -- the CXU~\cite{Gray2025CXU}.
 This implementation allows for switching between multiple custom extensions,

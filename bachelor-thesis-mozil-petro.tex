@@ -207,15 +207,14 @@ a modern, flexible interface for integrating multiple custom
 extensions into a RISC-V processor, supporting shared extension
 state and higher-level language integration.
 
-At the time of writing,  no hardware implementation of the CXU interface exists for any RISC-V processor, and no sandbox environment supports its development and evaluation under realistic system conditions.   
+At the time of writing,  no hardware implementation of the CXU interface exists for any RISC-V processor, and no sandbox environment supports its development and evaluation under realistic system conditions.
 
 In this thesis we implement the CXU interface as a SpinalHDL plugin
 for the VexiiRiscv processor and build the CXU Playground --
 an open-source, full-stack development and benchmarking environment
 built on the LiteX SoC framework. The Playground provides automated
 SoC generation, a Buildroot Linux environment for OS-level testing,
-and a C-level runtime library for invoking custom extensions
-without inline assembly.
+and a library for invoking custom extensions without inline assembly.
 % O.F. Оце C-level мене напрягає... Сленг і не зовсім конкретний. Варто переформулювати. ABI-сумісне з С?  (Тут і далі)
 
 To validate the framework, we implement and benchmark three case-study
