@@ -59,7 +59,8 @@ Notably, the CXU specification also defines a standardized Application Binary In
 (ABI), making it possible to invoke an extension from C without inline assembly.
 A reference runtime implementation is provided, in which calls to CXU extensions are
 wrapped in helper functions that select the appropriate extension via the
-\texttt{cxidx} CSR, save the previous state, and clean up the context afterward.
+\texttt{cxidx} CSR, % O.F. ¬и н≥би цю абрев≥атуру вперше п≥зн≥ше розшифровуЇте
+ save the previous state, and clean up the context afterward.
 The specification was developed with operating system support in mind and explicitly
 defines how the kernel must save and restore CXU state during context switches.
 As noted in Chapter~\ref{ch:introduction}, to the best of authors' knowledge, no hardware implementation of this interface existed prior to the present work, which forms the primary gap this thesis fills.
