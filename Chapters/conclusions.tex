@@ -4,11 +4,10 @@
 \section{Summary of Contributions}
 \label{sec:contributions_summary}
 
-This thesis addressed a concrete gap in the RISC-V custom-extension ecosystem: at
-the outset, the Composable eXtension Unit (CXU) specification existed as a design
-document but had no hardware implementation on any processor, and no sandbox
-environment supported its features. This work delivers both.
+% This thesis addressed a concrete gap in the RISC-V custom-extension ecosystem: at the outset, the Composable eXtension Unit (CXU) specification existed as a design document but had no hardware implementation on any processor, and no sandbox environment supported its features. This work delivers both.
+This thesis fills a key gap in the RISC-V custom-extension ecosystem by delivering both a hardware implementation of the CXU interface and a supporting development environment, where previously only a design specification existed\footnote{To the best of our knowledge.}.
 
+% O.F. Думаю, тут можна вказати, що CXU Playground це саме повністю Ваш доробок! :=) 
 The \textbf{CXU Playground} is an open-source, full-stack development and
 benchmarking environment for RISC-V custom extensions, built on the LiteX SoC
 framework and targeting the VexiiRiscv processor. The following components were
@@ -38,7 +37,7 @@ designed, implemented, and validated as part of this work:
           benchmarking suite.
 \end{itemize}
 
-\section{Key Results}
+\section{Key Results} % O.F. Як на мене, то невдала  назва -- ключовим є, що Ви зробили таку прикольну штуку :=) Це ключові тести абощо
 \label{sec:key_results}
 
 \textbf{AES acceleration} yielded the most significant performance improvement. Offloading SubBytes
@@ -66,14 +65,15 @@ Micro built-in inference self-tests; hardware timing data collection is ongoing.
 
 These results confirm that the CXU Playground can host extensions of
 varying complexity and that even a small number of tightly coupled custom
-instructions can yield order-of-magnitude cycle reductions for
+instructions can yield up to order-of-magnitude cycle reductions for
 arithmetic-intensive workloads.
-
+ 
 \section{Limitations of the Current Implementation}
 \label{sec:limitations_conclusion}
 
 Three limitations of the current implementation are worth highlighting.
 
+% O.F. О! Нарешті Ви написали про те, що мене турбувало суттєво вище, в главі 3 :=) Поясніть там детальніше. 
 First, \textbf{CSR access latency} is higher than the CXU specification assumes.
 Because \texttt{cxidx} and \texttt{cxdata} are memory-mapped over the Wishbone
 bus in the LiteX SoC rather than being native pipeline registers, each state read
@@ -86,13 +86,13 @@ Second, the \textbf{Linux kernel does not yet save and restore CXU state} as par
 of the task context switch. In a preemptive, multi-process workload, this is a
 correctness issue: if two processes share a physical CXU and the scheduler
 preempts one mid-invocation, the extension state can be corrupted. The playground
-is therefore currently safe only for single-process CXU workloads under Linux.
+is therefore currently safe only for \textbf{single-process CXU workloads} under Linux.
 
 Third, \textbf{CXU capabilities are not described in the Linux Device Tree}: the
 runtime library hard-codes extension addresses rather than discovering them
 dynamically through the kernel's device model.
 
-\section{Future Work}
+\section{Future Work} 
 \label{sec:future_work}
 
 The CXU Playground provides a solid foundation for several directions of future
@@ -105,9 +105,9 @@ the scheduler's context-switch path. This work would make the playground safe fo
 multi-process workloads and would complete the OS-facing portion of the CXU
 specification.
 
-Multi-processs benchmarks on linux are a logical extension of the benchmarks
-done in \autoref{subsec:gzip_impl}. Testing CXU and IO contention, as well
-as how IO and CXU compute may contend or compensate each other is an important
+Multi-process benchmarks on Linux are a logical extension of the benchmarks
+done in \autoref{subsec:gzip_impl}. Testing CXU and I/O contention, as well
+as how I/O and CXU compute may contend or compensate each other is an important
 topic we have not yet managed to cover in this work.
 
 Device Tree integration should follow naturally: extending the LiteX SoC
@@ -139,7 +139,9 @@ composable RISC-V custom extensions is practically achievable on commodity FPGA
 hardware. The framework successfully lowers the barrier to entry for custom
 hardware acceleration research by automating SoC generation, Linux integration,
 cross-compilation, and benchmarking into a single cohesive environment. The
-measured 5.25$\times$ AES speedup confirms that even a small number of carefully
+measured
+%  5.25$\times$ AES  % O.F. Прибрав, щоб не було ще одного повтору, але то не принципово
+speedup confirms that even a small number of carefully
 designed, tightly coupled hardware instructions can deliver substantial gains for
 the class of workloads most relevant to embedded cryptography and machine learning.
 The open-source playground provides a reproducible platform for the community to
