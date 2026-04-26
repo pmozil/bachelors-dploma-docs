@@ -19,7 +19,7 @@ the extensions developed in this work are evaluated
 \section{RISC-V Extensions For Custom Instruction Integration}
 \label{sec:related_riscv_extensions}
 
-Several interface specifications have been proposed to standardise the connection between
+Several interface specifications have been proposed to standardize the connection between
 a RISC-V processor and custom hardware accelerators.
 These specifications differ considerably in the number of extensions they support,
 the degree of OS integration they define, and the constraints they impose on the
@@ -28,7 +28,7 @@ programmer, all of which directly motivated the design choices made in this work
 \subsection{CFU}
 \label{subsec:cfu}
 
-The Custom Function Unit (CFU) specification \cite{Gray2022CFU, Gray2025CXU, Gray2025CXUGithub}
+The Custom Function Unit (CFU) specification~\cite{Gray2022CFU, Gray2025CXU, Gray2025CXUGithub}
 was proposed by Jan Gray et al.\ to make custom extensions modular and reusable
 across different RISC-V CPU implementations.
 The motivation was straightforward: many RISC-V processors incorporate some form of
@@ -41,29 +41,29 @@ The full interface specification is examined in Chapter~\ref{ch:theoretical_back
 
 Despite its value in establishing the concept of composable extensions, the CFU has
 important limitations.
-Only one extension may be connected per hardware thread, the extension may not access
-memory, and even when programming in a higher-level language the user must invoke a
-\textbf{custom-0|1|2|3} assembly instruction directly \cite{Gray2022CFU}.
+Only one extension may be connected per hardware thread; the extension may not access
+memory, and even when programming in a higher-level language, the user must invoke a
+\textbf{custom-0|1|2|3} assembly instruction directly~\cite{Gray2022CFU}.
 These constraints make the CFU impractical for workloads that require multiple distinct
 accelerators or expect a clean programming model.
 
 \subsection{CXU}
 \label{subsec:cxu}
 
-The CXU specification \cite{Gray2025CXU} is the successor to the CFU, designed to
+The CXU specification~\cite{Gray2025CXU} is the successor to the CFU, designed to
 address its principal limitations.
 It supports up to $2^{\textbf{XLEN}}$ simultaneous extensions, permits extensions to
 maintain a shared state, and defines the conditions under which an extension may access
-memory.
-Notably, the CXU specification also defines a standardised Application Binary Interface
+memory. % O.F. Розшифруйте тут XLEN -- не зважаючи на те, що він є в списку абревіатур
+Notably, the CXU specification also defines a standardized Application Binary Interface
 (ABI), making it possible to invoke an extension from C without inline assembly.
 A reference runtime implementation is provided, in which calls to CXU extensions are
 wrapped in helper functions that select the appropriate extension via the
-\texttt{cxidx} CSR, save the previous state, and clean up the context afterwards.
+\texttt{cxidx} CSR, save the previous state, and clean up the context afterward.
 The specification was developed with operating system support in mind and explicitly
 defines how the kernel must save and restore CXU state during context switches.
-As noted in Chapter~\ref{ch:introduction}, no hardware implementation of this interface
-existed prior to the present work, which forms the primary gap this thesis fills.
+As noted in Chapter~\ref{ch:introduction}, to the best of authors' knowledge, no hardware implementation of this interface existed prior to the present work, which forms the primary gap this thesis fills.
+% O.F. Дуже ретельно це перевірте! 
 
 \subsection{Core-V-XIF}
 \label{subsec:corev_xif}
@@ -76,10 +76,10 @@ that any compliant CPU can expose.
 Unlike the CFU and CXU, it permits custom CSRs and imposes fewer restrictions on
 extension behaviour, offering greater flexibility at the cost of a less uniform
 programming model.
-A sandbox built on Core-V-XIF, FRANCIS-V \cite{Egert2023FRANCISV}, is discussed further
+A sandbox built on Core-V-XIF, FRANCIS-V~\cite{Egert2023FRANCISV}, is discussed further
 in Section~\ref{sec:related_sandboxes}; however, because FRANCIS-V is tightly coupled
 to a specific CPU implementation, extensions developed for it cannot be straightforwardly
-ported to other cores, which limits the reusability that the CXU specification was
+ported to other cores, which limits the reusability that of the CXU specification was
 designed to provide.
 
 \section{Frameworks for FPGA-based SOC Development}
@@ -94,10 +94,10 @@ of the needs of this work.
 \subsection{LiteX}
 \label{subsec:litex}
 
-\textbf{LiteX} \cite{LiteXGitHub} is an open-source, Python-based framework for
+\textbf{LiteX}~\cite{LiteXGitHub} is an open-source, Python-based framework for
 building FPGA-based SoCs.
 It provides modules for bus integration, I/O, and CPU instantiation --- notably including
-VexiiRiscv \cite{VexiiRiscVGithub} --- as well as drivers for the most common FPGA
+VexiiRiscv~\cite{VexiiRiscVGithub} --- as well as drivers for the most common FPGA
 development board peripherals: DDR memory via LiteDRAM, Ethernet via LiteEth, PCIE,
 SATA, SD cards, and standard serial buses (I2C, UART, SPI, USB).
 The most widely used CFU development environment, the CFU Playground
@@ -110,7 +110,7 @@ development effort to focus on the CXU integration itself rather than peripheral
 \subsection{F4PGA}
 \label{subsec:f4pga}
 
-\textbf{F4PGA} \cite{F4PGA2019} provides a fully open-source FPGA toolchain targeting
+\textbf{F4PGA}~\cite{F4PGA2019} provides a fully open-source FPGA toolchain targeting
 multiple FPGA families.
 While not a SoC framework by itself, it is commonly paired with LiteX or custom SoC
 designs to enable reproducible, vendor-independent bitstream generation.
@@ -121,7 +121,7 @@ vendor toolchains.
 \subsection{MiSoC}
 \label{subsec:misoc}
 
-\textbf{MiSoC} \cite{MiSoC2014} is the predecessor of LiteX and introduced the concept
+\textbf{MiSoC}~\cite{MiSoC2014} is the predecessor of LiteX and introduced the concept
 of Python-based SoC generation.
 Although it is now deprecated, it is historically significant as the origin of the design
 patterns that LiteX inherited and extended, and is mentioned here to provide context for
@@ -130,7 +130,7 @@ the LiteX architecture described in Chapter~\ref{ch:theoretical_background}.
 \subsection{PULP Platform}
 \label{subsec:pulp}
 
-\textbf{PULP} \cite{PULP2015} is an open-source RISC-V-based SoC platform designed for
+\textbf{PULP}~\cite{PULP2015} is an open-source RISC-V-based SoC platform designed for
 energy-efficient parallel processing and accelerator integration.
 Its cluster-based architecture has made it widely used in academic research on DSP,
 cryptography, and accelerator-centric SoC exploration, including the machine learning
@@ -142,11 +142,11 @@ this thesis.
 \subsection{SpinalHDL}
 \label{subsec:spinalhdl}
 
-\textbf{SpinalHDL} \cite{SpinalHDL2018} is a hardware construction language, built on
+\textbf{SpinalHDL}~\cite{SpinalHDL2018} is a hardware construction language, built on
 Scala, commonly used to implement extensible SoCs.
 Its plugin-based CPU architecture enables fine-grained custom instruction and pipeline
 extensions, making it directly relevant to composable extension research.
-VexiiRiscv \cite{VexiiRiscVGithub} --- the CPU core used in this work --- is implemented
+VexiiRiscv~\cite{VexiiRiscVGithub} --- the CPU core used in this work --- is implemented
 in SpinalHDL, and the CXU plugin described in Chapter~\ref{ch:proposed_solution} was
 developed within this framework.
 The SpinalHDL programming model is introduced in
@@ -164,7 +164,7 @@ design of the CXU Playground developed in this work.
 \subsection{FRANCIS-V}
 \label{subsec:francisv}
 
-\textbf{FRANCIS-V} \cite{Egert2023FRANCISV} (FRAmework for iNtegrating Custom
+\textbf{FRANCIS-V}~\cite{Egert2023FRANCISV} (FRAmework for iNtegrating Custom
 InstructionS into RISC-V systems) is a framework aimed at making the design and
 integration of custom extensions and coprocessors more tractable.
 It provides an interface and methodology for connecting custom instruction hardware
@@ -207,6 +207,7 @@ In these respects it shares the same high-level goal as the CXU Playground.
 
 \end{tikzpicture}
 \caption{FRANCIS-V framework overview.}
+% O.F. Вибачте мою параною, але чи картинка Вашого авторства? (Бачу, що Ви її тут будували, але мало що :=)
 \label{fig:francisv}
 \end{figure}
 
@@ -221,7 +222,7 @@ for cross-implementation reuse.
 \subsection{CFU Playground}
 \label{subsec:cfu_playground}
 
-The CFU Playground \cite{CFUPlayground2022} is the closest prior work to the system
+The CFU Playground~\cite{CFUPlayground2022} is the closest prior work to the system
 developed in this thesis.
 It is a full-stack, open-source environment for the rapid design and evaluation of
 Custom Function Units on FPGA-based RISC-V soft CPUs, built on the LiteX framework
@@ -231,6 +232,7 @@ specialised hardware logic and write software to invoke their extensions.
 
 \begin{figure}[htb]
 \centering
+% O.F. !!! Оті фігурні дужки розверніть в другу сторону
 \begin{tikzpicture}[
     box/.style={rectangle, draw, rounded corners=3pt,
                 minimum width=3.2cm, minimum height=0.75cm,
@@ -267,6 +269,7 @@ specification, which restricts each thread to a single extension and requires as
 \textbf{custom-0|1|2|3} opcodes even in higher-level language contexts
 \cite{Gray2022CFU, CFUPlayground2022}.
 It does not support OS-level benchmarking, as it runs bare-metal software only.
+% O.F. Бенчмаркінг то таке, чи підтримує переключення процесів? Хоча б на рівні як UART, блокуванням унікального ресурсу? Не пам'ятаю, але краще уточнічніть тут
 These restrictions --- a single extension per thread, no memory access, no Linux support ---
 were precisely those that motivated the CXU specification.
 The CXU Playground developed in this work can therefore be understood as the natural
@@ -288,18 +291,18 @@ Chapter~\ref{ch:experiments_results}.
 \subsection{AES and Symmetric Cryptography}
 \label{subsec:related_aes}
 
-AES \cite{NISTAES} is based on a substitution-permutation network whose inner
+AES~\cite{NISTAES} is based on a substitution-permutation network whose inner
 operations: SubBytes (an S-box lookup over $\text{GF}(2^8)$) and MixColumns
 (matrix multiplication over $\text{GF}(2^8)$) --- map naturally onto
 combinational hardware.
-Cui and Balasch \cite{Cui2023MaskingAES} demonstrate this concretely in the context
+Cui and Balasch~\cite{Cui2023MaskingAES} demonstrate this concretely in the context
 of masked AES, introducing constant-time finite-field instructions that simultaneously
 improve performance and resistance to side-channel attacks.
 Their result is particularly relevant here because it shows that a small number of
 carefully scoped ISA extensions --- rather than a monolithic AES coprocessor --- can
 yield substantial gains while preserving software flexibility.
 
-Primas et al.\ \cite{Primas2024NLUV} take a related approach with the NLU-V
+Primas et al.~\cite{Primas2024NLUV} take a related approach with the NLU-V
 extension, fusing S-box substitution and linear diffusion into a single hardware
 block to minimise intermediate data movement for both AES and PRESENT.
 Both works support the design choice made in Chapter~\ref{ch:proposed_solution}
@@ -316,13 +319,13 @@ Lattice-based schemes such as CRYSTALS-Kyber and NewHope rely on polynomial arit
 particularly the Number Theoretic Transform (NTT), whose butterfly operations and
 modular reductions are expensive on a standard ALU.
 
-Sozbilir et al.\ \cite{Sozbilir2020Kyber} prototype NTT-specific ISA extensions on
+Sozbilir et al.~\cite{Sozbilir2020Kyber} prototype NTT-specific ISA extensions on
 VexRiscv and report up to an 85\% speedup for Kyber and NewHope, demonstrating
 that the class of processor used in this work is a viable target for post-quantum
 acceleration.
-Levi et al.\ \cite{Levi2020RISQV} extend this further with RISQ-V, achieving a
+Levi et al.~\cite{Levi2020RISQV} extend this further with RISQ-V, achieving a
 $9.6\times$ speedup for Kyber using 29 tightly coupled custom instructions.
-Vranken et al.\ \cite{Vranken2023UniformMul} argue for a uniform set of
+Vranken et al.~\cite{Vranken2023UniformMul} argue for a uniform set of
 multiply-accumulate and modular-reduction primitives capable of serving both
 classical and post-quantum schemes, which directly foreshadows the approach taken
 for the MAC extension described in Section~\ref{sec:case_studies}.
@@ -333,7 +336,7 @@ Section~\ref{sec:future_work}.
 \subsection{Hashing}
 \label{subsec:related_hashing}
 
-Alawadi et al.\ \cite{Alawadi2025SHA3} implement the full Keccak-f permutation as a
+Alawadi et al.~\cite{Alawadi2025SHA3} implement the full Keccak-f permutation as a
 single custom RISC-V instruction, reporting substantial reductions in instruction count
 and cycle time for SHA-3.
 Their area-performance trade-off analysis provides a useful reference for understanding
@@ -358,16 +361,16 @@ mechanism to GZIP acceleration, making this a novel case study.
 
 Neural network inference on microcontrollers is dominated by Multiply-Accumulate (MAC)
 operations in convolutional and fully connected layers.
-TensorFlow Lite Micro \cite{David2021TFLiteMicro} provides portable INT8-quantised
+TensorFlow Lite Micro~\cite{David2021TFLiteMicro} provides portable INT8-quantised
 inference kernels for this class of device.
-The CMSIS-NN library \cite{Lai2018CMSISNN} shows that ARM DSP SIMD MAC instructions
+The CMSIS-NN library~\cite{Lai2018CMSISNN} shows that ARM DSP SIMD MAC instructions
 yield up to a $4.6\times$ improvement over scalar code; the PULP platform
 \cite{PULP2015} achieves comparable gains on RISC-V with hardware-loop and
 dot-product extensions.
 The MAC extension evaluated in Chapter~\ref{ch:experiments_results} follows the same
 principle, exposing a fused multiply-accumulate operation as a single-cycle CXU
 instruction.
-Oliveira et al.\ \cite{Oliveira2022MiniFloat} push this further with float8
+Oliveira et al.~\cite{Oliveira2022MiniFloat} push this further with float8
 dot-product accumulation for low-precision training, demonstrating that the same
 CXU-style integration pattern scales to more exotic arithmetic formats.
 
@@ -376,7 +379,7 @@ CXU-style integration pattern scales to more exotic arithmetic formats.
 
 Running benchmarks inside a full operating system yields performance numbers that
 reflect real-world deployment conditions rather than isolated microbenchmarks.
-The Linux-on-LiteX-VexRiscv project \cite{LinuxOnLiteXGitHub} establishes the
+The Linux-on-LiteX-VexRiscv project~\cite{LinuxOnLiteXGitHub} establishes the
 feasibility of booting Linux on a soft RISC-V core in a LiteX SoC, and documents
 the required hardware configuration: MMU support, atomic instructions, and supervisor
 privilege mode.
@@ -388,3 +391,4 @@ for AES, post-quantum cryptography, hashing, machine learning, and (to a lesser
 extent) compression, none has done so within the CXU framework, and none has
 provided a unified sandbox environment that supports multiple extensions under Linux.
 The present work addresses both gaps simultaneously.
+% O.F. Ретельно перевірте, чи це правда! 
