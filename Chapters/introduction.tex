@@ -4,15 +4,15 @@
 \section{Motivation}
 \label{sec:motivation}
 
-RISC-V \cite{RISC-VInternational2025} is a modern and extensible instruction set architecture often used in systems-on-chip,
-especially, FPGA-based ones \cite{LiteXGitHub}, such that it is both architecturally simple and energy-efficient.
+RISC-V~\cite{RISC-VInternational2025} is a modern and extensible instruction set architecture often used in systems-on-chip,
+especially FPGA-based ones~\cite{LiteXGitHub}, such that it is both architecturally simple and energy-efficient.
 RISC-V's instruction set architecture is designed with custom extensions in mind,
 so designing custom extensions would be a straightforward process.
 It is, however, a difficult task to integrate a custom extension into the RISC-V specification,
+% O.F. Інтегрувати в специфікацію -- то Ви що маєте на увазі? 
 and even more so to implement an extension for the multitude of RISC-V processor implementations.
-With such issues, and the fact that most FPGA-based SOCs offer plenty
-of space to also implement an extension,
-in mind, Jan Gray et al. designed the custom composable extensions (CFU) \cite{Gray2022CFU} extension.
+With such issues, and the fact that most FPGA-based SOCs offer plenty of space to also implement an extension, % O.F. Оце plenty of space  певне варто переформулювати.
+in mind, Jan Gray et al. designed the custom composable extensions (CFU) extension~\cite{Gray2022CFU}.
 It allows for an implementation of a specific extension to be used across multiple RISC-V CPUs,
 so as to use the single extension implementation across a multitude of different RISC-V CPUs.
 CFU allows for a single extension to be connected to a hardware thread.
@@ -22,13 +22,14 @@ There is also a playground for designing the CFU extensions on a ready-made SOC 
 the CFU playground. It allows the users to implement a
 CFU and write a main script that runs and invokes the implemented extension.
 CFU is a useful interface for implementing a single extension,
-but when combining extensions, especially those,
-that may have multiple different functions and utilize the function id,
-managing them becomes complex and introduces significant software overhead.
+but when combining extensions, especially those
+that may have multiple different functions and utilize the function ID,
+managing them becomes complex and introduces significant software overhead. 
+% O.F. Тут просилося б трохи подробиць -- в чому проблема з композицією
 Because of that, Gray et al. also designed a newer version of composable
-custom extensions - the CXU \cite{Gray2025CXU}.
+custom extensions -- the CXU~\cite{Gray2025CXU}.
 This implementation allows for switching between multiple custom extensions,
-but, as of time of writing, there is not yet an implementation of it
+but, as of the time of writing, there is not yet an implementation of it
 on any of the RISC-V implementations, nor an environment for developing custom extensions.
 
 \section{Contributions}
@@ -38,7 +39,7 @@ This thesis makes the following concrete contributions:
 
 \begin{itemize}
     \item \textbf{First CXU implementation:} A SpinalHDL plugin for the
-    VexiiRiscv processor that realises the CXU interface, including opcode
+    VexiiRiscv processor that implements the CXU interface, including opcode
     interception at the execute stage, pipeline stall management for multi-cycle
     operations, and \texttt{cxidx}/\texttt{cxdata} CSR support.
 
@@ -61,7 +62,7 @@ This thesis makes the following concrete contributions:
 Benchmarking results demonstrate approximately a 5.25$\times$  reduction in cycles
 per byte for AES encryption and a roughly 10\% reduction in CPU time for GZIP
 bit-stream manipulation, confirming that even a small number of tightly coupled
-custom instructions can yield substantial gains for arithmetic-intensive workloads (see \autoref{ch:experiments_results}).
+custom instructions can yield substantial gains for arithmetic-intensive workloads (see \autoref{ch:experiments_results}). 
 
 \section{Structure Of The Thesis}
 \label{sec:structure}
