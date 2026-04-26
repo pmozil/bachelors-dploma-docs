@@ -495,7 +495,8 @@ software AES round.
 The dominant computational cost of AES on a standard processor lies in the SubBytes
 and MixColumns operations, which each require a loop of 5--6 iterations, performing
 3--4 arithmetic operations in $GF(2^8)$ per iteration.
-By implementing the $GF(2^8)$ arithmetic as a single-cycle combinational CXU
+By implementing the $GF(2^8)$ arithmetic as a single-cycle combinational CXU 
+% O.F. А воно точно в один цикл влізеться?
 instruction, each loop body collapses to a single custom instruction, eliminating the
 multi-instruction inner loop entirely.
 The design and benchmarking of this extension are described in
