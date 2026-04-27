@@ -8,7 +8,7 @@ execution target (Section~\ref{sec:riscv_vexii}), then describes the LiteX SoC f
 used to assemble the surrounding hardware platform
 (Sections~\ref{sec:litex_ecosystem}--\ref{sec:buildroot}).
 Section~\ref{sec:cxu_mechanism} examines the CXU coupling architecture and the
-VexiiRiscv plugin interface through which the extension is realised.
+VexiiRiscv plugin interface through which the extension is implemented.
 Section~\ref{sec:linux_litex} covers the requirements and boot flow for running Linux on
 the generated SoC.
 The chapter closes with the algorithmic background for the three case-study workloads:
@@ -29,14 +29,15 @@ open governance model and can be freely implemented without licensing constraint
 
 A central design principle of RISC-V is modularity.
 The base ISA provides only essential functionality, while optional extensions add
-specialised capabilities.
+specialized capabilities.
 Common extension subsets include integer multiplication (\textbf{IM}),
 atomic operations (\textbf{A}),
 single- and double-precision floating-point arithmetic (\textbf{F/D}),
 and compressed 16-bit instructions (\textbf{C}).
 Typical Linux-capable systems use configurations such as RV64IMAC \cite{Rakhmatov2023Survey};
+% O.F. А MMU?
 this work uses RV32IMA, as required by the Linux-on-LiteX platform
-\cite{LinuxOnLiteXGitHub}.
+\cite{LinuxOnLiteXGitHub}. % O.F. Тут може варто пару слів -- а чому вимагає саме так
 
 Notably for this thesis, RISC-V reserves opcode space for custom extensions.
 These custom instruction fields allow designers to introduce application-specific
@@ -50,18 +51,19 @@ Section~\ref{sec:cxu_mechanism}.
 VexiiRiscv \cite{VexiiRiscVGithub} is a configurable RISC-V core implemented in
 SpinalHDL \cite{SpinalHDL2018}, a Scala-based hardware description language.
 Unlike traditional Verilog or VHDL, SpinalHDL supports generative and highly
-parameterised hardware construction, enabling scalable design-space exploration,
+parameterized hardware construction, enabling scalable design-space exploration,
 easier feature composition, and cleaner abstraction boundaries.
 
 The processor follows a classical pipelined architecture with up to five stages:
 \textbf{Fetch}, \textbf{Decode}, \textbf{Execute}, \textbf{Memory}, and \textbf{Write-back},
-where Fetch and Execute may be unified and Memory and Write-back may also be unified.
+where Fetch and Execute may be unified, and Memory and Write-back may also be unified.
 One of the distinguishing characteristics of VexiiRiscv is its plugin-based architecture:
+% O.F. Може варто пару слів більше про те, як ті плагіни функціонують
 major features --- including memory management units (MMU), caches, branch predictors,
 and custom execution units --- are implemented as independent plugins that can be composed
 at generation time.
-The CXU extension is realised as an execute-stage plugin; all computation performed by
-CXU coprocessors therefore occurs in the Execute stage of the pipeline, as described
+The CXU extension is implemented as an execute-stage plugin; all computation is performed by
+CXU coprocessors and therefore occurs in the Execute stage of the pipeline, as described
 further in Section~\ref{sec:cxu_mechanism}.
 
 \section{The LiteX SoC Ecosystem}
@@ -151,29 +153,33 @@ Wishbone is a simple, flexible, synchronous bus protocol that supports
 master-slave communication between cores and peripherals, enabling memory-mapped I/O
 and simplifying peripheral integration \cite{LiteXGitHub}.
 
+
 Control and Status Registers (CSRs) provide the primary mechanism for software-hardware
-communication.
+communication. % O.F.  Тут може варто уточнити, з якою хардою комунікації -- тут плутає memory mapper природа LiteX-комунікації і спосіб комунікації з CXU. Чи cxidx тут і є memory mapped? 
+% O.F. Знайдений розділ limitations трохи прояснив -- але, думаю, врато і тут
 CSRs are memory-mapped registers that allow software to configure hardware blocks,
-query status information, and trigger operations \cite{LiteDramGithub, LiteXGitHub}.
+query status information, and trigger operations~\cite{LiteDramGithub, LiteXGitHub}.
 This abstraction is essential for interacting with accelerators and managing runtime
-behaviour; in the CXU implementation, the \texttt{cxidx} and \texttt{cxdata} registers
+behavior; in the CXU implementation, the \texttt{cxidx} and \texttt{cxdata} registers
 through which software selects the active extension are CSRs of this kind.
 An important consequence --- discussed as a limitation in
-Section~\ref{sec:limitations} --- is that CSR access incurs a full Wishbone bus
+Section~\ref{sec:limitations_design} --- is that CSR access incurs a full Wishbone bus
 transaction, which is substantially more expensive than the register-file access assumed
 by the CXU specification.
+% -- O.F. !!! {sec:limitations} -- не знаходить. Його немає, чи я чогось не розумію?  І там ще десь була відсутня мітка, але не пам'ятаю, чи ця ж, чи інша
+% O.F. Пофіксив, але перевірте
 
 \subsection{Memory Management}
 \label{subsec:memory_mgmt}
 
 LiteX integrates external memory controllers through LiteDRAM \cite{LiteDramGithub},
 which supports SDRAM and DDR memory devices.
-LiteDRAM abstracts memory timing, initialisation, and refresh management, exposing a
+LiteDRAM abstracts memory timing, initialization, and refresh management, exposing a
 consistent interface to the system bus.
 The SoC memory map defines address regions for ROM, SRAM, DRAM, CSRs, and peripherals.
 Proper memory layout is particularly important for Linux-based systems, where kernel
 placement, device tree configuration, and bootloader operation all depend on predictable
-address organisation.
+address organization.
 
 \section{Software Development for LiteX-Based SoCs}
 \label{sec:sw_dev}
@@ -206,7 +212,7 @@ performance counters (such as the RISC-V \texttt{mcycle} counter) for cycle-accu
 measurement.
 Linux-based systems require drivers and standard system calls, but provide a more
 realistic deployment environment; the benchmarks in
-Chapter~\ref{ch:experiments_results} use both modes to separate hardware-only
+Chapter~\ref{ch:experiments_results} uses both modes to separate hardware-only
 latency from system-level overhead.
 
 \section{Buildroot}
@@ -229,7 +235,7 @@ Section~\ref{sec:sandbox_env}.
 \label{sec:cxu_mechanism}
 
 This section describes the architectural principles behind the CXU interface and the
-specific way in which it is realised within the VexiiRiscv pipeline.
+specific way in which it is implemented within the VexiiRiscv pipeline.
 Understanding these details is a prerequisite for the implementation discussion in
 Chapter~\ref{ch:proposed_solution}.
 
@@ -238,7 +244,7 @@ Chapter~\ref{ch:proposed_solution}.
 
 Hardware accelerators can be integrated into a system using either tightly coupled or
 loosely coupled approaches \cite{Gray2022CFU, Gray2025CXU}.
-Tightly coupled accelerators are directly integrated into the CPU pipeline, operate as
+Tightly coupled accelerators are directly integrated into the CPU pipeline and operate as
 execution units, and are invoked through custom instructions.
 This approach offers low latency and direct register-file access, but requires careful
 hazard and pipeline management.
@@ -283,7 +289,7 @@ cycle (or after a stall for multi-cycle operations).
 \label{subsec:cxu_plugin_iface}
 
 The VexiiRiscv plugin interface enables custom instruction integration at multiple
-stages of the pipeline.
+stages of the pipeline. % O.F. Зізнаюся, не впевнений, чи розумію це речення...
 Within the CXU plugin, instruction handling proceeds through the following steps:
 
 \begin{enumerate}
@@ -333,13 +339,13 @@ configuration parameters during bitstream generation.
 
 The Linux boot flow on a LiteX SoC proceeds through multiple stages, as illustrated
 in Figure~\ref{fig:boot_process}.
-Following hardware reset, the LiteX BIOS performs hardware initialisation and memory
-training.
+Following a hardware reset, the LiteX BIOS performs hardware initialization and memory
+training. % O.F. А що таке memory training? :=) 
 OpenSBI \cite{OpenSBIGithub} then provides the Supervisor Binary Interface (SBI),
-acting as a firmware layer between machine mode and the operating system, handling
-low-level initialisation and exposing standardised services to the kernel.
-A secondary bootloader such as U-Boot \cite{UBootWebsite} loads the Linux kernel image
-and optional initial ramdisk into memory, after which the Linux kernel initialises
+acting as a firmware layer between the machine mode and the operating system, handling
+low-level initialization and exposing standardized services to the kernel.
+A secondary bootloader, such as U-Boot \cite{UBootWebsite}, loads the Linux kernel image
+and an optional initial ramdisk into memory, after which the Linux kernel initialises
 drivers, the memory management subsystem, and user-space services.
 
 \begin{figure}[htb]
@@ -391,7 +397,8 @@ Each round consists of several processing steps; inverse rounds are applied duri
 decryption to recover the plaintext.
 The full encryption pipeline is illustrated in Figure~\ref{fig:aes_flow}.
 
-\begin{figure}[htb]
+% O.F. Мусив тут знак оклику поставити -- інакше виходило зовсім негарно. Один з мінусів таких картинко, безпосередньо в латеху зроблених -- редагувати важко, масштабувати дуже важко.
+\begin{figure}[!htb]
     \centering
     \begin{tikzpicture}[
         node distance=0.6cm and 1.5cm,
@@ -469,17 +476,15 @@ negligibly to AES runtime on a standard processor.
 \subsubsection{MixColumns}
 
 MixColumns treats each column of the State as a four-element vector of $\mathrm{GF}(2^8)$
-elements and multiplies it by the fixed circulant matrix
-
+elements and multiplies it by the fixed circulant matrix:
 $$
 \begin{bmatrix}
 02 & 03 & 01 & 01 \\
 01 & 02 & 03 & 01 \\
 01 & 01 & 02 & 03 \\
 03 & 01 & 01 & 02
-\end{bmatrix}
+\end{bmatrix},
 $$
-
 where all arithmetic is performed modulo the AES reduction polynomial
 $x^8 + x^4 + x^3 + x + 1$.
 Each output byte requires a multiply-by-2, a multiply-by-3, and two identity terms
@@ -490,13 +495,14 @@ software AES round.
 \label{subsec:aes_cxu}
 
 The dominant computational cost of AES on a standard processor lies in the SubBytes
-and MixColumns operations, which each require a loop of 5--6 iterations performing
+and MixColumns operations, which each require a loop of 5--6 iterations, performing
 3--4 arithmetic operations in $GF(2^8)$ per iteration.
-By implementing the $GF(2^8)$ arithmetic as a single-cycle combinational CXU
+By implementing the $GF(2^8)$ arithmetic as a single-cycle combinational CXU 
+% O.F. А воно точно в один цикл влізеться?
 instruction, each loop body collapses to a single custom instruction, eliminating the
 multi-instruction inner loop entirely.
 The design and benchmarking of this extension are described in
-Sections~\ref{subsec:aes_impl} and~\ref{subsec:aes_results}.
+Sections~\ref{subsec:aes_impl} and~\ref{subsec:aes_results} respectively.
 
 \section{GZIP}
 \label{sec:gzip}
@@ -575,7 +581,7 @@ as described below.
 Huffman coding assigns shorter bit patterns to more frequently occurring symbols,
 reducing the average number of bits required to represent the data.
 DEFLATE supports two tree modes: \textbf{Static Huffman}, which uses predefined code
-tables defined by the DEFLATE specification and requires no per-block header overhead,
+tables defined by the DEFLATE specification and require no per-block header overhead,
 and \textbf{Dynamic Huffman}, which computes a custom code table per block by counting
 symbol frequencies and constructing an optimal tree.
 Dynamic coding typically achieves better compression because it adapts to the local
@@ -601,11 +607,9 @@ disproportionately expensive on a standard ALU.
 
 The \textbf{cxu\_bitrev} instruction reverses the order of bits in a 32-bit word,
 producing an output where bit $i$ of the result corresponds to bit $31-i$ of the input:
-
 $$
-y_i = x_{31-i}
+y_i = x_{31-i}.
 $$
-
 Bit reversal is useful for constructing lookup indices for variable-length codes and is
 implemented purely combinationally by wiring input bits to reversed output positions.
 
@@ -613,11 +617,9 @@ implemented purely combinationally by wiring input bits to reversed output posit
 
 The \textbf{cxu\_mask} instruction generates a mask containing the lowest $n$ bits set
 to one:
-
 $$
-mask = (1 \ll n) - 1
+mask = (1 \ll n) - 1.
 $$
-
 Such masks are required when extracting variable-length bit fields from the compressed
 DEFLATE bitstream; generating them in a single instruction reduces the number of shifts
 and arithmetic operations in the decoding loop.
@@ -625,11 +627,9 @@ and arithmetic operations in the decoding loop.
 \subsubsection{Huffman Table Index Extraction}
 
 The \textbf{cxu\_huft\_idx} instruction computes a masked index value:
-
 $$
-index = x \;\&\; ((1 \ll n) - 1)
+index = x \;\&\; ((1 \ll n) - 1).
 $$
-
 This operation is used during Huffman decoding to determine the lookup index into the
 decoding table based on the current bit buffer.
 By fusing mask generation and bit extraction into a single instruction, the number of
@@ -666,19 +666,18 @@ Section~\ref{subsec:gzip_results}.
 TensorFlow Lite for Microcontrollers (TFLite Micro) \cite{David2021TFLiteMicro} is a
 framework designed to run machine learning models on devices with only kilobytes of
 memory.
-To optimise the memory footprint and execution speed on such constrained targets,
-models deployed via TFLite Micro are typically quantised, converting 32-bit
+To optimize the memory footprint and execution speed on such constrained targets,
+models deployed via TFLite Micro are typically quantized, converting 32-bit
 floating-point weights and activations into 8-bit integers (INT8).
 
 \subsection{Multiply-Accumulate Operations}
 \label{subsec:mac}
 
-The most computationally expensive layers in quantised inference --- Convolutional
+The most computationally expensive layers in quantized inference --- Convolutional
 (Conv2D) and Fully Connected (Dense) layers --- execute as a series of dot products.
 The fundamental operation in each dot product is the Multiply-Accumulate (MAC):
-
 $$
-acc = acc + (weight \times activation)
+acc = acc + (weight \times activation).
 $$
 
 On a standard RISC-V RV32IM implementation, a single MAC requires fetching the
