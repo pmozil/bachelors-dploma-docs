@@ -1,0 +1,184 @@
+\chapter{Detailed FPGA Synthesis Area Reports}
+\label{app:detailed_tables}
+
+This appendix provides the per-instance cell counts produced by Vivado
+synthesis for each of the three CXU configurations evaluated in
+Chapter~\ref{ch:experiments_results}.
+
+All figures are for the Digilent Arty S7-50 (Xilinx Spartan-7 XC7S50) target,
+synthesised with Vivado in out-of-context mode as part of the LiteX SoC build flow.
+The \emph{Cells} column reports the number of primitive logic primitives
+(LUTs, flip-flops, carry chains, etc.) assigned to each hierarchical module
+after synthesis.
+
+\begin{table}[!htbp]
+\centering
+\caption{Per-module cell counts for the AES CXU configuration (total: 20\,948 cells).}
+\label{tab:area_aes}
+\small
+\begin{tabular}{rllr}
+\toprule
+\textbf{\#} & \textbf{Instance} & \textbf{Module} & \textbf{Cells} \\
+\midrule
+1  & top                                                                 &                                                  & 20\,948 \\
+2  & \quad Cxu0                                                          & Cxu0                                             &    209 \\
+3  & \quad VexiiRiscvLitex                                               & VexiiRiscvLitex                                  & 12\,967 \\
+4  & \quad\quad cpuResetCtrl\_fiber\_aggregator\_asyncBuffers\_0         & BufferCC                                         &      2 \\
+5  & \quad\quad cpuResetCtrl\_fiber\_buffer                              & BufferCC\_1                                      &      2 \\
+6  & \quad\quad mem\_toAxi4\_logic\_bridge                               & Axi4Bridge                                       &    401 \\
+7  & \quad\quad\quad a\_ctx                                              & ContextAsyncBufferFull                           &     10 \\
+8  & \quad\quad\quad\quad contexts                                       & Ram\_1w\_1ra (p3)                                &     10 \\
+9  & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_7                                 &     26 \\
+10 & \quad\quad peripheral\_bus\_arbiter\_core                           & Arbiter\_1                                       &     91 \\
+11 & \quad\quad\quad a\_arbiter                                          & StreamArbiter\_6                                 &     91 \\
+12 & \quad\quad peripheral\_bus\_decoder\_core                           & Decoder\_1                                       &     72 \\
+13 & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_9                                 &     72 \\
+14 & \quad\quad peripheral\_clint\_thread\_core                          & TilelinkClint                                    &    362 \\
+15 & \quad\quad peripheral\_plic\_intc\_thread\_logic                    & TilelinkPlic                                     &    410 \\
+16 & \quad\quad peripheral\_toAxiLite4\_logic\_bridge                    & AxiLite4Bridge                                   &    153 \\
+17 & \quad\quad splited\_mBus\_arbiter\_core                             & Arbiter                                          &     61 \\
+18 & \quad\quad\quad a\_arbiter                                          & StreamArbiter\_5                                 &     61 \\
+19 & \quad\quad splited\_mBus\_decoder\_core                             & Decoder                                          &     18 \\
+20 & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_8                                 &     18 \\
+21 & \quad\quad splited\_mBus\_to\_mem\_toAxi4\_up\_widthAdapter         & WidthAdapter                                     &    246 \\
+22 & \quad\quad\quad upsize\_d\_ctx                                      & ContextAsyncBufferFull\_1                        &     66 \\
+23 & \quad\quad\quad\quad contexts                                       & Ram\_1w\_1ra (p4)                                &     66 \\
+24 & \quad\quad splited\_mBus\_to\_peripheral\_bus\_widthAdapter         & WidthAdapter\_1                                  &    103 \\
+25 & \quad\quad vexiis\_0\_logic\_core                                   & VexiiRiscv                                       &  8\,347 \\
+26 & \quad\quad\quad BtbPlugin\_logic\_ras\_mem\_stack                   & Ram\_1w\_1ra (p0)                                &     19 \\
+27 & \quad\quad\quad CxuPlugin\_logic\_cxStateMem                        & RamSyncMwMux                                     &    211 \\
+28 & \quad\quad\quad\quad location                                       & RamAsyncMwReg                                    &    202 \\
+29 & \quad\quad\quad CxuPlugin\_logic\_onJoin\_busRspStream\_fifo        & StreamFifoLowLatency                             &    174 \\
+30 & \quad\quad\quad\quad fifo                                           & StreamFifo                                       &    174 \\
+31 & \quad\quad\quad\quad\quad logic\_ram                                & Ram\_1w\_1ra                                     &    148 \\
+32 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_0\_ways\_0   & Ram\_1w\_1ra (p1)                                &     77 \\
+33 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_0\_ways\_1   & Ram\_1w\_1ra (p1\_0)                             &     88 \\
+34 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_1\_ways\_0   & Ram\_1w\_1ra (p2)                                &     31 \\
+35 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_0\_mem                   & Ram\_1w\_1rs                                     &     71 \\
+36 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_1\_mem                   & Ram\_1w\_1rs\_1                                  &     13 \\
+37 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_2\_mem                   & Ram\_1w\_1rs\_2                                  &     13 \\
+38 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_3\_mem                   & Ram\_1w\_1rs\_3                                  &    101 \\
+39 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_0       & Ram\_1w\_1ra (p1\_4)                             &     19 \\
+40 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_1       & Ram\_1w\_1ra (p1\_5)                             &     15 \\
+41 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_2       & Ram\_1w\_1ra (p1\_6)                             &     27 \\
+42 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_1\_ways\_0       & Ram\_1w\_1ra (p2\_7)                             &     22 \\
+43 & \quad\quad\quad early0\_DivPlugin\_logic\_processing\_div           & DivRadix                                         &    554 \\
+44 & \quad\quad\quad integer\_RegFilePlugin\_logic\_regfile\_fpga        & RegFileMem                                       &    307 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{Per-module cell counts for the GZIP CXU configuration (total: 20\,666 cells).}
+\label{tab:area_gzip}
+\small
+\begin{tabular}{rllr}
+\toprule
+\textbf{\#} & \textbf{Instance} & \textbf{Module} & \textbf{Cells} \\
+\midrule
+1  & top                                                                 &                                                  & 20\,666 \\
+2  & \quad Cxu0                                                          & Cxu0                                             &     20 \\
+3  & \quad VexiiRiscvLitex                                               & VexiiRiscvLitex                                  & 12\,857 \\
+4  & \quad\quad cpuResetCtrl\_fiber\_aggregator\_asyncBuffers\_0         & BufferCC                                         &      2 \\
+5  & \quad\quad cpuResetCtrl\_fiber\_buffer                              & BufferCC\_1                                      &      2 \\
+6  & \quad\quad mem\_toAxi4\_logic\_bridge                               & Axi4Bridge                                       &    401 \\
+7  & \quad\quad\quad a\_ctx                                              & ContextAsyncBufferFull                           &     10 \\
+8  & \quad\quad\quad\quad contexts                                       & Ram\_1w\_1ra (p3)                                &     10 \\
+9  & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_7                                 &     26 \\
+10 & \quad\quad peripheral\_bus\_arbiter\_core                           & Arbiter\_1                                       &     91 \\
+11 & \quad\quad\quad a\_arbiter                                          & StreamArbiter\_6                                 &     91 \\
+12 & \quad\quad peripheral\_bus\_decoder\_core                           & Decoder\_1                                       &     71 \\
+13 & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_9                                 &     71 \\
+14 & \quad\quad peripheral\_clint\_thread\_core                          & TilelinkClint                                    &    362 \\
+15 & \quad\quad peripheral\_plic\_intc\_thread\_logic                    & TilelinkPlic                                     &    413 \\
+16 & \quad\quad peripheral\_toAxiLite4\_logic\_bridge                    & AxiLite4Bridge                                   &    152 \\
+17 & \quad\quad splited\_mBus\_arbiter\_core                             & Arbiter                                          &     61 \\
+18 & \quad\quad\quad a\_arbiter                                          & StreamArbiter\_5                                 &     61 \\
+19 & \quad\quad splited\_mBus\_decoder\_core                             & Decoder                                          &     18 \\
+20 & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_8                                 &     18 \\
+21 & \quad\quad splited\_mBus\_to\_mem\_toAxi4\_up\_widthAdapter         & WidthAdapter                                     &    246 \\
+22 & \quad\quad\quad upsize\_d\_ctx                                      & ContextAsyncBufferFull\_1                        &     66 \\
+23 & \quad\quad\quad\quad contexts                                       & Ram\_1w\_1ra (p4)                                &     66 \\
+24 & \quad\quad splited\_mBus\_to\_peripheral\_bus\_widthAdapter         & WidthAdapter\_1                                  &    103 \\
+25 & \quad\quad vexiis\_0\_logic\_core                                   & VexiiRiscv                                       &  8\,271 \\
+26 & \quad\quad\quad BtbPlugin\_logic\_ras\_mem\_stack                   & Ram\_1w\_1ra (p0)                                &     19 \\
+27 & \quad\quad\quad CxuPlugin\_logic\_cxStateMem                        & RamSyncMwMux                                     &    212 \\
+28 & \quad\quad\quad\quad location                                       & RamAsyncMwReg                                    &    204 \\
+29 & \quad\quad\quad CxuPlugin\_logic\_onJoin\_busRspStream\_fifo        & StreamFifoLowLatency                             &    270 \\
+30 & \quad\quad\quad\quad fifo                                           & StreamFifo                                       &    270 \\
+31 & \quad\quad\quad\quad\quad logic\_ram                                & Ram\_1w\_1ra                                     &    132 \\
+32 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_0\_ways\_0   & Ram\_1w\_1ra (p1)                                &     76 \\
+33 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_0\_ways\_1   & Ram\_1w\_1ra (p1\_0)                             &     89 \\
+34 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_1\_ways\_0   & Ram\_1w\_1ra (p2)                                &     31 \\
+35 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_0\_mem                   & Ram\_1w\_1rs                                     &     70 \\
+36 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_1\_mem                   & Ram\_1w\_1rs\_1                                  &     13 \\
+37 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_2\_mem                   & Ram\_1w\_1rs\_2                                  &     13 \\
+38 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_3\_mem                   & Ram\_1w\_1rs\_3                                  &    101 \\
+39 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_0       & Ram\_1w\_1ra (p1\_4)                             &     19 \\
+40 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_1       & Ram\_1w\_1ra (p1\_5)                             &     15 \\
+41 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_2       & Ram\_1w\_1ra (p1\_6)                             &     27 \\
+42 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_1\_ways\_0       & Ram\_1w\_1ra (p2\_7)                             &     22 \\
+43 & \quad\quad\quad early0\_DivPlugin\_logic\_processing\_div           & DivRadix                                         &    441 \\
+44 & \quad\quad\quad integer\_RegFilePlugin\_logic\_regfile\_fpga        & RegFileMem                                       &    431 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{Per-module cell counts for the TFLite MAC CXU configuration (total: 20\,698 cells).
+         There is no separate \texttt{Cxu0} top-level instance; the MAC unit is
+         optimized out for this specific instance.}
+\label{tab:area_tflite}
+\small
+\begin{tabular}{rllr}
+\toprule
+\textbf{\#} & \textbf{Instance} & \textbf{Module} & \textbf{Cells} \\
+\midrule
+1  & top                                                                 &                                                  & 20\,698 \\
+2  & \quad VexiiRiscvLitex                                               & VexiiRiscvLitex                                  & 12\,874 \\
+3  & \quad\quad cpuResetCtrl\_fiber\_aggregator\_asyncBuffers\_0         & BufferCC                                         &      2 \\
+4  & \quad\quad cpuResetCtrl\_fiber\_buffer                              & BufferCC\_1                                      &      2 \\
+5  & \quad\quad mem\_toAxi4\_logic\_bridge                               & Axi4Bridge                                       &    402 \\
+6  & \quad\quad\quad a\_ctx                                              & ContextAsyncBufferFull                           &     10 \\
+7  & \quad\quad\quad\quad contexts                                       & Ram\_1w\_1ra (p3)                                &     10 \\
+8  & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_7                                 &     26 \\
+9  & \quad\quad peripheral\_bus\_arbiter\_core                           & Arbiter\_1                                       &     91 \\
+10 & \quad\quad\quad a\_arbiter                                          & StreamArbiter\_6                                 &     91 \\
+11 & \quad\quad peripheral\_bus\_decoder\_core                           & Decoder\_1                                       &     71 \\
+12 & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_9                                 &     71 \\
+13 & \quad\quad peripheral\_clint\_thread\_core                          & TilelinkClint                                    &    362 \\
+14 & \quad\quad peripheral\_plic\_intc\_thread\_logic                    & TilelinkPlic                                     &    413 \\
+15 & \quad\quad peripheral\_toAxiLite4\_logic\_bridge                    & AxiLite4Bridge                                   &    152 \\
+16 & \quad\quad splited\_mBus\_arbiter\_core                             & Arbiter                                          &     61 \\
+17 & \quad\quad\quad a\_arbiter                                          & StreamArbiter\_5                                 &     61 \\
+18 & \quad\quad splited\_mBus\_decoder\_core                             & Decoder                                          &     18 \\
+19 & \quad\quad\quad d\_arbiter                                          & StreamArbiter\_8                                 &     18 \\
+20 & \quad\quad splited\_mBus\_to\_mem\_toAxi4\_up\_widthAdapter         & WidthAdapter                                     &    246 \\
+21 & \quad\quad\quad upsize\_d\_ctx                                      & ContextAsyncBufferFull\_1                        &     66 \\
+22 & \quad\quad\quad\quad contexts                                       & Ram\_1w\_1ra (p4)                                &     66 \\
+23 & \quad\quad splited\_mBus\_to\_peripheral\_bus\_widthAdapter         & WidthAdapter\_1                                  &    103 \\
+24 & \quad\quad vexiis\_0\_logic\_core                                   & VexiiRiscv                                       &  8\,288 \\
+25 & \quad\quad\quad BtbPlugin\_logic\_ras\_mem\_stack                   & Ram\_1w\_1ra (p0)                                &     18 \\
+26 & \quad\quad\quad CxuPlugin\_logic\_cxStateMem                        & RamSyncMwMux                                     &    224 \\
+27 & \quad\quad\quad\quad location                                       & RamAsyncMwReg                                    &    216 \\
+28 & \quad\quad\quad CxuPlugin\_logic\_onJoin\_busRspStream\_fifo        & StreamFifoLowLatency                             &    162 \\
+29 & \quad\quad\quad\quad fifo                                           & StreamFifo                                       &    162 \\
+30 & \quad\quad\quad\quad\quad logic\_ram                                & Ram\_1w\_1ra                                     &    127 \\
+31 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_0\_ways\_0   & Ram\_1w\_1ra (p1)                                &     83 \\
+32 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_0\_ways\_1   & Ram\_1w\_1ra (p1\_0)                             &     82 \\
+33 & \quad\quad\quad FetchL1Plugin\_translationStorage\_sl\_1\_ways\_0   & Ram\_1w\_1ra (p2)                                &     31 \\
+34 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_0\_mem                   & Ram\_1w\_1rs                                     &     70 \\
+35 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_1\_mem                   & Ram\_1w\_1rs\_1                                  &     13 \\
+36 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_2\_mem                   & Ram\_1w\_1rs\_2                                  &     13 \\
+37 & \quad\quad\quad LsuL1Plugin\_logic\_banks\_3\_mem                   & Ram\_1w\_1rs\_3                                  &    101 \\
+38 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_0       & Ram\_1w\_1ra (p1\_4)                             &     19 \\
+39 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_1       & Ram\_1w\_1ra (p1\_5)                             &     15 \\
+40 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_0\_ways\_2       & Ram\_1w\_1ra (p1\_6)                             &     27 \\
+41 & \quad\quad\quad LsuPlugin\_translationStorage\_sl\_1\_ways\_0       & Ram\_1w\_1ra (p2\_7)                             &     22 \\
+42 & \quad\quad\quad early0\_DivPlugin\_logic\_processing\_div           & DivRadix                                         &    554 \\
+43 & \quad\quad\quad integer\_RegFilePlugin\_logic\_regfile\_fpga        & RegFileMem                                       &    524 \\
+\bottomrule
+\end{tabular}
+\end{table}

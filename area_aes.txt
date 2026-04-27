@@ -1,0 +1,187 @@
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:01:25 ; elapsed = 00:01:29 . Memory (MB): peak = 2287.027 ; gain = 791.406 ; free physical = 449 ; free virtual = 15366
+---------------------------------------------------------------------------------
+
+Report Check Netlist: 
++------+------------------+-------+---------+-------+------------------+
+|      |Item              |Errors |Warnings |Status |Description       |
++------+------------------+-------+---------+-------+------------------+
+|1     |multi_driven_nets |      0|        0|Passed |Multi driven nets |
++------+------------------+-------+---------+-------+------------------+
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:01:25 ; elapsed = 00:01:29 . Memory (MB): peak = 2287.027 ; gain = 791.406 ; free physical = 449 ; free virtual = 15366
+---------------------------------------------------------------------------------
+
+Report RTL Partitions: 
++-+--------------+------------+----------+
+| |RTL Partition |Replication |Instances |
++-+--------------+------------+----------+
++-+--------------+------------+----------+
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:01:26 ; elapsed = 00:01:30 . Memory (MB): peak = 2287.027 ; gain = 791.406 ; free physical = 433 ; free virtual = 15357
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:01:26 ; elapsed = 00:01:30 . Memory (MB): peak = 2287.027 ; gain = 791.406 ; free physical = 433 ; free virtual = 15357
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:01:26 ; elapsed = 00:01:30 . Memory (MB): peak = 2287.027 ; gain = 791.406 ; free physical = 431 ; free virtual = 15357
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:01:26 ; elapsed = 00:01:30 . Memory (MB): peak = 2287.027 ; gain = 791.406 ; free physical = 430 ; free virtual = 15356
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP and Shift Register Reporting
+---------------------------------------------------------------------------------
+
+Static Shift Register Report:
++------------+-----------------------------------------------------------------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+|Module Name | RTL Name                                                                                                                                | Length | Width | Reset Signal | Pull out first Reg | Pull out last Reg | SRL16E | SRLC32E | 
++------------+-----------------------------------------------------------------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+|arty_s7     | VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118/vexiis_0_logic_core/execute_ctrl3_up_Prediction_ALIGNED_JUMPED_lane0_reg               | 3      | 1     | NO           | NO                 | YES               | 1      | 0       | 
+|arty_s7     | VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118/vexiis_0_logic_core/execute_ctrl4_up_MulPlugin_HIGH_lane0_reg                          | 3      | 1     | NO           | NO                 | YES               | 1      | 0       | 
+|arty_s7     | VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118/vexiis_0_logic_core/execute_ctrl4_up_lane0_IntFormatPlugin_logic_WIDTH_ID_lane0_reg[1] | 3      | 2     | NO           | NO                 | YES               | 2      | 0       | 
+|arty_s7     | VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118/vexiis_0_logic_core/execute_ctrl4_up_lane0_IntFormatPlugin_logic_SIGNED_lane0_reg      | 3      | 1     | NO           | NO                 | YES               | 1      | 0       | 
+|arty_s7     | VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118/vexiis_0_logic_core/execute_ctrl3_up_Prediction_BRANCH_HISTORY_lane0_reg[11]           | 3      | 12    | NO           | NO                 | YES               | 12     | 0       | 
+|arty_s7     | VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118/vexiis_0_logic_core/execute_ctrl3_up_GSharePlugin_GSHARE_COUNTER_lane0_0_reg[1]        | 3      | 2     | NO           | NO                 | YES               | 2      | 0       | 
+|arty_s7     | board_new_master_rdata_valid8_reg                                                                                                       | 9      | 1     | YES          | NO                 | YES               | 1      | 0       | 
+|arty_s7     | board_new_master_rdata_valid17_reg                                                                                                      | 9      | 1     | YES          | NO                 | YES               | 1      | 0       | 
+|arty_s7     | a7ddrphy_dqs_bitslip_tappeddelayline7_reg                                                                                               | 8      | 1     | YES          | NO                 | YES               | 1      | 0       | 
++------------+-----------------------------------------------------------------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP and Shift Register Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+------------+------+
+|      |Cell        |Count |
++------+------------+------+
+|1     |BUFG        |     6|
+|2     |CARRY4      |   397|
+|3     |DSP48E1_3   |     1|
+|4     |DSP48E1_4   |     1|
+|5     |DSP48E1_5   |     2|
+|6     |IDDR        |     4|
+|7     |IDELAYCTRL  |     1|
+|8     |IDELAYE2    |    16|
+|9     |ISERDESE2   |    16|
+|10    |LUT1        |   447|
+|11    |LUT2        |   644|
+|12    |LUT3        |  1980|
+|13    |LUT4        |  1950|
+|14    |LUT5        |  1906|
+|15    |LUT6        |  3835|
+|16    |MUXF7       |    32|
+|17    |MUXF8       |     4|
+|18    |ODDR        |     9|
+|19    |OSERDESE2   |    45|
+|20    |PLLE2_ADV   |     1|
+|21    |RAM16X1D    |     1|
+|22    |RAM32M      |   114|
+|23    |RAM64M      |     4|
+|24    |RAMB18E1    |    13|
+|25    |RAMB36E1    |     4|
+|26    |RAMB36E1_1  |     9|
+|27    |RAMB36E1_10 |     1|
+|28    |RAMB36E1_11 |     1|
+|29    |RAMB36E1_12 |     1|
+|30    |RAMB36E1_13 |     1|
+|31    |RAMB36E1_14 |     1|
+|32    |RAMB36E1_15 |     1|
+|33    |RAMB36E1_16 |     1|
+|34    |RAMB36E1_17 |     1|
+|35    |RAMB36E1_18 |     1|
+|36    |RAMB36E1_19 |     1|
+|37    |RAMB36E1_2  |     1|
+|38    |RAMB36E1_3  |     2|
+|39    |RAMB36E1_4  |     1|
+|40    |RAMB36E1_5  |     1|
+|41    |RAMB36E1_6  |     1|
+|42    |RAMB36E1_7  |     1|
+|43    |RAMB36E1_8  |     1|
+|44    |RAMB36E1_9  |     1|
+|45    |SRL16E      |    22|
+|46    |STARTUPE2   |     1|
+|47    |FDCE        |   697|
+|48    |FDPE        |    34|
+|49    |FDRE        |  8192|
+|50    |FDSE        |   220|
+|51    |IBUF        |     8|
+|52    |IOBUF       |    22|
+|53    |IOBUFDS     |     2|
+|54    |OBUF        |    38|
+|55    |OBUFDS      |     1|
++------+------------+------+
+
+Report Instance Areas: 
++------+---------------------------------------------------------------+-------------------------------------------------+------+
+|      |Instance                                                       |Module                                           |Cells |
++------+---------------------------------------------------------------+-------------------------------------------------+------+
+|1     |top                                                            |                                                 | 20698|
+|2     |  VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118             |VexiiRiscvLitex_3166844d6106480508bf6b5db8cdb118 | 12874|
+|3     |    cpuResetCtrl_fiber_aggregator_asyncBuffers_0               |BufferCC                                         |     2|
+|4     |    cpuResetCtrl_fiber_buffer                                  |BufferCC_1                                       |     2|
+|5     |    mem_toAxi4_logic_bridge                                    |Axi4Bridge                                       |   402|
+|6     |      a_ctx                                                    |ContextAsyncBufferFull                           |    10|
+|7     |        contexts                                               |Ram_1w_1ra__parameterized3                       |    10|
+|8     |      d_arbiter                                                |StreamArbiter_7                                  |    26|
+|9     |    peripheral_bus_arbiter_core                                |Arbiter_1                                        |    91|
+|10    |      a_arbiter                                                |StreamArbiter_6                                  |    91|
+|11    |    peripheral_bus_decoder_core                                |Decoder_1                                        |    71|
+|12    |      d_arbiter                                                |StreamArbiter_9                                  |    71|
+|13    |    peripheral_clint_thread_core                               |TilelinkClint                                    |   362|
+|14    |    peripheral_plic_intc_thread_logic                          |TilelinkPlic                                     |   413|
+|15    |    peripheral_toAxiLite4_logic_bridge                         |AxiLite4Bridge                                   |   152|
+|16    |    splited_mBus_arbiter_core                                  |Arbiter                                          |    61|
+|17    |      a_arbiter                                                |StreamArbiter_5                                  |    61|
+|18    |    splited_mBus_decoder_core                                  |Decoder                                          |    18|
+|19    |      d_arbiter                                                |StreamArbiter_8                                  |    18|
+|20    |    splited_mBus_to_mem_toAxi4_up_widthAdapter                 |WidthAdapter                                     |   246|
+|21    |      upsize_d_ctx                                             |ContextAsyncBufferFull_1                         |    66|
+|22    |        contexts                                               |Ram_1w_1ra__parameterized4                       |    66|
+|23    |    splited_mBus_to_peripheral_bus_widthAdapter                |WidthAdapter_1                                   |   103|
+|24    |    vexiis_0_logic_core                                        |VexiiRiscv                                       |  8288|
+|25    |      BtbPlugin_logic_ras_mem_stack                            |Ram_1w_1ra__parameterized0                       |    18|
+|26    |      CxuPlugin_logic_cxStateMem                               |RamSyncMwMux                                     |   224|
+|27    |        location                                               |RamAsyncMwReg                                    |   216|
+|28    |      CxuPlugin_logic_onJoin_busRspStream_fifo                 |StreamFifoLowLatency                             |   162|
+|29    |        fifo                                                   |StreamFifo                                       |   162|
+|30    |          logic_ram                                            |Ram_1w_1ra                                       |   127|
+|31    |      FetchL1Plugin_logic_translationStorage_logic_sl_0_ways_0 |Ram_1w_1ra__parameterized1                       |    83|
+|32    |      FetchL1Plugin_logic_translationStorage_logic_sl_0_ways_1 |Ram_1w_1ra__parameterized1_0                     |    82|
+|33    |      FetchL1Plugin_logic_translationStorage_logic_sl_1_ways_0 |Ram_1w_1ra__parameterized2                       |    31|
+|34    |      LsuL1Plugin_logic_banks_0_mem                            |Ram_1w_1rs                                       |    70|
+|35    |      LsuL1Plugin_logic_banks_1_mem                            |Ram_1w_1rs_1                                     |    13|
+|36    |      LsuL1Plugin_logic_banks_2_mem                            |Ram_1w_1rs_2                                     |    13|
+|37    |      LsuL1Plugin_logic_banks_3_mem                            |Ram_1w_1rs_3                                     |   101|
+|38    |      LsuPlugin_logic_translationStorage_logic_sl_0_ways_0     |Ram_1w_1ra__parameterized1_4                     |    19|
+|39    |      LsuPlugin_logic_translationStorage_logic_sl_0_ways_1     |Ram_1w_1ra__parameterized1_5                     |    15|
+|40    |      LsuPlugin_logic_translationStorage_logic_sl_0_ways_2     |Ram_1w_1ra__parameterized1_6                     |    27|
+|41    |      LsuPlugin_logic_translationStorage_logic_sl_1_ways_0     |Ram_1w_1ra__parameterized2_7                     |    22|
+|42    |      early0_DivPlugin_logic_processing_div                    |DivRadix                                         |   554|
+|43    |      integer_RegFilePlugin_logic_regfile_fpga                 |RegFileMem                                       |   524|
++------+---------------------------------------------------------------+-------------------------------------------------+------+

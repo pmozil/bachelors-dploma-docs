@@ -4,7 +4,7 @@
 \section{Problem Statement}
 \label{sec:problem_statement}
 
-% O.F. Òðîõè º ïîâòîð³â ç ïîïåðåäí³ì, àëå,  ïðèíöèï³, õàé áóäå...
+% O.F. Ð¢Ñ€Ð¾Ñ…Ð¸ Ñ” Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ñ–Ð² Ð· Ð¿Ð¾Ð¿ÐµÑ€ÐµÐ´Ð½Ñ–Ð¼, Ð°Ð»Ðµ,  Ð¿Ñ€Ð¸Ð½Ñ†Ð¸Ð¿Ñ–, Ñ…Ð°Ð¹ Ð±ÑƒÐ´Ðµ...
 The RISC-V ISA is designed with the explicit intent of supporting custom extensions,
 allowing developers to optimise processors for specific workloads.
 In practice, however, the process of designing, integrating, and evaluating custom
@@ -36,11 +36,9 @@ coprocessors within an embedded system.
 \section{System Architecture and Playground Design}
 \label{sec:system_arch}
 
-% O.F. Çíîâó ïîâòîðè... Ìîæëèâî, ùîñü ç öüîãî ìàëî á ïåðåêî÷óâàòè ó ïîïåðåäí³é ðîçä³ë -- òåîð³¿
-The CXU Playground is built on the LiteX framework~\cite{LiteXGitHub}, which was
-selected for the same reason it underpins the CFU Playground: it abstracts low-level
-hardware connectivity and provides a unified build system, allowing development effort
-to focus on the CXU integration rather than peripheral assembly.
+% O.F. Ð—Ð½Ð¾Ð²Ñƒ Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ð¸... ÐœÐ¾Ð¶Ð»Ð¸Ð²Ð¾, Ñ‰Ð¾ÑÑŒ Ð· Ñ†ÑŒÐ¾Ð³Ð¾ Ð¼Ð°Ð»Ð¾ Ð± Ð¿ÐµÑ€ÐµÐºÐ¾Ñ‡ÑƒÐ²Ð°Ñ‚Ð¸ Ñƒ Ð¿Ð¾Ð¿ÐµÑ€ÐµÐ´Ð½Ñ–Ð¹ Ñ€Ð¾Ð·Ð´Ñ–Ð» -- Ñ‚ÐµÐ¾Ñ€Ñ–Ñ—
+The CXU Playground is built on the LiteX framework~\cite{LiteXGitHub}
+to focus effort to focus on the CXU integration rather than peripheral assembly.
 LiteX enables automated generation of the FPGA-based SoC by connecting the CPU core
 to essential peripherals --- including UART and Ethernet --- and to external memory via
 LiteDRAM.
@@ -49,7 +47,9 @@ memory-mapped I/O access to all connected components, as described in
 Section~\ref{subsec:interconnect}.
 
 The core processor of the SoC is VexiiRiscv~\cite{VexiiRiscVGithub}, configured as an
-RV32IMAFC target and implemented in SpinalHDL. % O.F. Òóò íà ïàðó áóêâ á³ëüøå, í³æ â ïîïåðåäíüîìó ðîçä³ë³ -- ìîæå ïîÿñí³òü
+RV32IMAFC target and implemented in SpinalHDL. Integer operations and atomics are used for linux,
+and compressed instructions / floats are used to simplify compiling TensorFlow ~\cite{David2021TFLiteMicro}.
+% O.F. Ð¢ÑƒÑ‚ Ð½Ð° Ð¿Ð°Ñ€Ñƒ Ð±ÑƒÐºÐ² Ð±Ñ–Ð»ÑŒÑˆÐµ, Ð½Ñ–Ð¶ Ð² Ð¿Ð¾Ð¿ÐµÑ€ÐµÐ´Ð½ÑŒÐ¾Ð¼Ñƒ Ñ€Ð¾Ð·Ð´Ñ–Ð»Ñ– -- Ð¼Ð¾Ð¶Ðµ Ð¿Ð¾ÑÑÐ½Ñ–Ñ‚ÑŒ
 VexiiRiscv's plugin-based architecture allows the CXU extension to be integrated as an
 independent execute-stage plugin without modifying the core pipeline, as discussed in
 Section~\ref{subsec:vexii}.
@@ -75,9 +75,11 @@ the custom logic processes these inputs based on its internal state and returns 
 output to the destination register \textbf{rd}; and software manages and queries the
 CXU's shared state via the dedicated \textbf{cxidx} (Extension Index) and
 \textbf{cxdata} Control/Status Registers (CSRs).
-For multi-cycle operations, the plugin asserts a halt signal to the CPU pipeline,
+For multi-cycle operations, the plugin freezes the CPU pipeline,
 managing pipeline stalls and structural hazards to ensure correct execution ordering
-and data integrity. % O.F. Ìåí³ òóò çíàíü áðàêóº -- ñàìå halt signal? Íå stall àáîùî? 
+and data integrity.
+% O.F. ÐœÐµÐ½Ñ– Ñ‚ÑƒÑ‚ Ð·Ð½Ð°Ð½ÑŒ Ð±Ñ€Ð°ÐºÑƒÑ” -- ÑÐ°Ð¼Ðµ halt signal? ÐÐµ stall Ð°Ð±Ð¾Ñ‰Ð¾? 
+% P. M. Ð¢ÑƒÑ‚ Ð½Ð°Ð²Ñ–Ñ‚ÑŒ Ð½Ðµ halt, Ð° Ð±ÑƒÐºÐ²Ð°Ð»ÑŒÐ½Ð¾ Ð·Ð°Ð¼Ð¾Ñ€Ð¾Ð¶ÑƒÑ” ÐºÐ¾Ð½Ð²ÐµÑ”Ñ€, Ñ†Ðµ Ð¿Ñ€Ð¾ÑÑ‚Ð¾ Ð½Ð°Ð·Ð²Ð°Ð»Ð¸ Ñ‚Ð°ÐºÐ¾Ð¶ halt Ð² SpinalHDL, Ð²Ð¸Ð±Ð°Ñ‡Ñ‚Ðµ >~<
 
 Figure~\ref{fig:cxu_pipeline} illustrates how the CXU plugin sits below the Execute
 stage of the pipeline, receiving operands from Decode and returning results that are
@@ -139,7 +141,7 @@ dynamically mapping the memory layout, hardware peripherals, and --- in future w
 CXU capabilities to the operating system.
 Figure~\ref{fig:cxu_stack} shows the resulting full-system software stack.
 
-% O.F. ×åðåç íåâèð³âíÿí³ñòü êàðòèíêà, çâè÷àéíî, ñòðàøíåíüêà âèéøëà... Àëå íåìàº ðàäè, õàé âæå.
+% O.F. Ð§ÐµÑ€ÐµÐ· Ð½ÐµÐ²Ð¸Ñ€Ñ–Ð²Ð½ÑÐ½Ñ–ÑÑ‚ÑŒ ÐºÐ°Ñ€Ñ‚Ð¸Ð½ÐºÐ°, Ð·Ð²Ð¸Ñ‡Ð°Ð¹Ð½Ð¾, ÑÑ‚Ñ€Ð°ÑˆÐ½ÐµÐ½ÑŒÐºÐ° Ð²Ð¸Ð¹ÑˆÐ»Ð°... ÐÐ»Ðµ Ð½ÐµÐ¼Ð°Ñ” Ñ€Ð°Ð´Ð¸, Ñ…Ð°Ð¹ Ð²Ð¶Ðµ.
 \begin{figure}[htb]
     \centering
     \begin{tikzpicture}[
@@ -150,7 +152,7 @@ Figure~\ref{fig:cxu_stack} shows the resulting full-system software stack.
         rt/.style={fill=cyan!10},
         usr/.style={fill=cyan!30},
         box/.style={rectangle, draw, rounded corners=3pt,
-            minimum width=3.2cm, minimum height=0.75cm, align=center,
+            minimum width=10cm, minimum height=0.75cm, align=center,
             text centered, font=\small}
     ]
     \node[box, hw] (hardware) {Hardware: LiteX SoC + VexiiRiscv + CXU Extensions};
@@ -251,11 +253,22 @@ from performing expensive bitwise OR/shift sequences that typically bottleneck c
 To measure the performance benefits of the CXU MAC extension,
 a standard TensorFlow Lite Micro benchmarking application was
 executed within the generated Buildroot Linux environment.
-Only one type of layer, a linear fully connected layer, was tested for speedup. % O.F. Íàäàéòå òóò îáãðóíòóâàííÿ -- ìè ïðî öå áàãàòî äèñêóòóâàëè :=) 
+Only one type of layer, a linear fully connected layer, was tested for speedup.
 
-The benchmark utilized a quantized model
-(e.g., the Person Detection or Micro Speech keyword spotting model)
-commonly used to evaluate TinyML performance.
+Though the initial idea of this test was to integrate a full
+network into the FPGA fabric, so as to test running a whole network in
+one instruction, the FPGA fabric would not fit a full network on it ---
+such a task would better fit an approach of precomputing values to
+read-only memory.
+
+Due to the problem of having the state be limited by slow
+writing to the CSR (see ~\autoref{sec:limitations_design}),
+the most fitting test to demonstrate this implementation was the
+multiply-accumulate extension on tensorflow lite.
+% O.F. ÐÐ°Ð´Ð°Ð¹Ñ‚Ðµ Ñ‚ÑƒÑ‚ Ð¾Ð±Ð³Ñ€ÑƒÐ½Ñ‚ÑƒÐ²Ð°Ð½Ð½Ñ -- Ð¼Ð¸ Ð¿Ñ€Ð¾ Ñ†Ðµ Ð±Ð°Ð³Ð°Ñ‚Ð¾ Ð´Ð¸ÑÐºÑƒÑ‚ÑƒÐ²Ð°Ð»Ð¸ :=)
+
+The benchmark utilized a simple untrained
+and quantized model to evaluate TinyML performance.
 
 The execution latency was measured for both the baseline software implementation
 (using standard RV32IM instructions) and the CXU-accelerated implementation.
@@ -306,8 +319,10 @@ hardware performance counters and standard Linux profiling tools to compare the
 execution time of the software reference implementation against the CXU-accelerated
 version.
 For each extension, both variants were compiled for the RV32IMAFC target using the same
-cross-compilation toolchain and optimisation flags --- \texttt{-O2} for bare-metal
-targets and \texttt{-O3} within the Buildroot Linux environment --- ensuring a fair comparison. % O.F. Òàê, ñòîï, à ÷îãî ñàìå òàê áóäå ÷åñíî?!
+cross-compilation toolchain and optimisation flags --- \texttt{-O3} for bare-metal
+targets and \texttt{-O3} within the Buildroot Linux environment --- ensuring a fair comparison.
+% O.F. Ð¢Ð°Ðº, ÑÑ‚Ð¾Ð¿, Ð° Ñ‡Ð¾Ð³Ð¾ ÑÐ°Ð¼Ðµ Ñ‚Ð°Ðº Ð±ÑƒÐ´Ðµ Ñ‡ÐµÑÐ½Ð¾?!
+% P. M. Ð‘Ð¾ Ñ Ð¼Ñ–ÑÑ‚Ð°Ð¹Ð¿Ð½ÑƒÐ², Ñ– Ñ‚Ð°Ð¼ Ñ– Ñ‚Ð°Ð¼ Ð¼Ð°Ð»Ð¾ Ð±ÑƒÑ‚Ð¸ O3 ((
 Execution time was measured at multiple input sizes to assess scalability and to
 distinguish fixed invocation overhead from per-byte computation savings.
 
@@ -321,6 +336,29 @@ Where the measured speedup fell below theoretical estimates, profiling data was 
 identify the source of overhead, such as CXU invocation cost, pipeline stall cycles for
 multi-cycle operations, or context-switching overhead in the Linux environment.
 The results of this analysis are presented in Chapter~\ref{ch:experiments_results}.
+
+\section{Target Hardware: Digilent Arty S7-50}
+\label{sec:target_hardware}
+
+All synthesis, implementation, and benchmarking experiments in this work were carried
+out on the \textbf{Digilent Arty S7-50} development board~\cite{DigilentArtyS7},
+which hosts a Xilinx Spartan-7 XC7S50 FPGA.
+
+The Spartan-7 XC7S50 provides 52{,}160 logic cells organised as Look-Up Tables (LUTs)
+and flip-flops, 2{,}700\,Kb of distributed block RAM, and 120 DSP48E1 slices.
+
+The board itself exposes 256\,MB of DDR3L SDRAM (accessed via LiteDRAM and the
+A7DDRPHY PHY), a USB-UART bridge for console access, and a 10/100 Ethernet PHY
+for network-boot and file transfer.
+These peripherals are sufficient to boot a full Linux image and to transfer benchmark
+payloads of arbitrary size from a host machine.
+
+The system clock is derived from the on-board 100\,MHz oscillator; the LiteX SoC
+builder instantiates a \texttt{PLLE2\_ADV} PLL to generate the CPU and peripheral
+clocks.
+In the baseline configuration used for all experiments the CPU runs at 50\,MHz,
+such that it leaves timing margin for the CXU combinational
+paths without requiring per-extension timing closure tuning.
 
 \section{Limitations}
 \label{sec:limitations_design}
@@ -370,24 +408,41 @@ resources and expose extensions through a standard device interface.
 \subsection{Clock Frequency Limitations}
 \label{subsec:lim_clock}
 
-The maximum clock frequency of the SoC is constrained by the critical path through
-the Wishbone interconnect and the CXU combinational logic when targeting
-entry-level FPGA boards. Deep combinational extensions can lower the synthesis
-Fmax, requiring either pipeline registers inside the CXU or a lower system clock. 
-% O.F. Ùîñü ÿ ïîïåðåäíº ðå÷åííÿ âçàãàë³ íå çðîçóì³â... Äóìàþ, âàðòî ïåðåôîðìóëþâàòè ÷è ïîÿñíèòè
-This trade-off should be characterised per extension as part of the development
-workflow.
+The maximum achievable clock frequency of the SoC is primarily
+limited by the longest combinational path in the design.
+In entry-level FPGA implementations,
+this critical path typically runs through the
+Wishbone interconnect and the combinational logic inside the CXU.
+
+As CXU extensions become more complex and introduce deeper combinational logic,
+the critical path length increases.
+This reduces the maximum synthesis frequency
+(Fmax, the highest clock frequency at which a digital circuit can reliably operate without timing violations.)
+that the FPGA toolchain can achieve. To address this limitation,
+either additional pipeline registers must be inserted inside the CXU
+to break long combinational chains, or the overall system clock frequency must be reduced.
+
+This creates a trade-off between extension complexity,
+latency, and achievable clock speed. Each CXU extension should
+therefore be evaluated individually and characterised in
+terms of its impact on timing as part of the development workflow.
+
+% O.F. Ð©Ð¾ÑÑŒ Ñ Ð¿Ð¾Ð¿ÐµÑ€ÐµÐ´Ð½Ñ” Ñ€ÐµÑ‡ÐµÐ½Ð½Ñ Ð²Ð·Ð°Ð³Ð°Ð»Ñ– Ð½Ðµ Ð·Ñ€Ð¾Ð·ÑƒÐ¼Ñ–Ð²... Ð”ÑƒÐ¼Ð°ÑŽ, Ð²Ð°Ñ€Ñ‚Ð¾ Ð¿ÐµÑ€ÐµÑ„Ð¾Ñ€Ð¼ÑƒÐ»ÑŽÐ²Ð°Ñ‚Ð¸ Ñ‡Ð¸ Ð¿Ð¾ÑÑÐ½Ð¸Ñ‚Ð¸
 
 \subsection{Multi-Process CXU Access and Kernel Driver}
 \label{subsec:lim_multiprocess}
 
 The current userspace interface relies on a lightweight UIO (Userspace I/O) driver,
-% O.F. Äîäàéòå òóò òðîõè ïîäðîáèöü ïðî UIO
-which provides no protection against concurrent access from multiple processes and
+which is a thin wrapper aroung the CXU call instructions.
+It only ensures that the call by itself is cleaned up
+(the proper CXU is selected and the inputs sanitized to avoid improper calling of the CXU),
+and, still, it provides a way to call the CXU outright, without the overhead of sanitizing inputs.
+% O.F. Ð”Ð¾Ð´Ð°Ð¹Ñ‚Ðµ Ñ‚ÑƒÑ‚ Ñ‚Ñ€Ð¾Ñ…Ð¸ Ð¿Ð¾Ð´Ñ€Ð¾Ð±Ð¸Ñ†ÑŒ Ð¿Ñ€Ð¾ UIO
+This provides no protection against concurrent access from multiple processes and
 does not save or restore CXU state during context switches. A proper kernel-level
 driver is required to handle mutual exclusion and to integrate CXU state
 save/restore into the task-switch path. Without this, running CXU-accelerated
 applications in a preemptive multi-process workload risks state corruption.
 
 
-% O.F. ×îãî òóò äóæå ³ äóæå áðàêóº -- îïèñó âàøîãî çàë³çà! 
+% O.F. Ð§Ð¾Ð³Ð¾ Ñ‚ÑƒÑ‚ Ð´ÑƒÐ¶Ðµ Ñ– Ð´ÑƒÐ¶Ðµ Ð±Ñ€Ð°ÐºÑƒÑ” -- Ð¾Ð¿Ð¸ÑÑƒ Ð²Ð°ÑˆÐ¾Ð³Ð¾ Ð·Ð°Ð»Ñ–Ð·Ð°! 
