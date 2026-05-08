@@ -13,14 +13,51 @@ header-includes:
   - \usetikzlibrary{shapes, arrows.meta, fit, positioning, backgrounds, decorations.pathreplacing}
   - \usepackage{booktabs}
   - \usepackage{colortbl}
-  - \setbeamertemplate{frame footer}{\insertshortauthor\ - CXU Playground}
+  - |
+    \setbeamertemplate{footline}{
+      \leavevmode%
+      \hbox{%
+      \begin{beamercolorbox}[wd=.95\paperwidth,ht=2.25ex,dp=1ex,leftskip=.3cm]{}%
+      \end{beamercolorbox}%
+      \begin{beamercolorbox}[wd=.05\paperwidth,ht=4.25ex,dp=1ex,rightskip=.3cm plus1fil]{}%
+        \insertframenumber{} / \inserttotalframenumber
+      \end{beamercolorbox}}%
+      \vskip0pt%
+    }
 ---
 
-# Motivation
+# Motivation -- why use extension plugins at all?
+
 
 \begin{columns}[T]
 \begin{column}{0.32\textwidth}
-\begin{block}{CFU — exists}
+\begin{block}{RISC-V extensions}
+\begin{itemize}
+  \item RISC-V is designed with extensions in mind
+  \item The instruction set allows for many custom commands
+  \item Official extensions are managed by the RISC-V commmitee
+\end{itemize}
+\end{block}
+\end{column}
+
+\begin{column}{0.32\textwidth}
+\begin{block}{}
+\begin{itemize}
+  \item These extensions are hardly trivial to design -- a lot must be kept in mind (memory ordering, compute constraints etc.)
+  \item Extensions may share opcodes -- this breaks compatibility between some extensions
+  \item Extensions are hard to publish -- it takes a while to ratify the extension
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+
+---
+
+# Motivation -- why CXU?
+
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{block}{CFU - exists}
 \begin{itemize}
   \item Reusable across RISC-V cores
   \item Up to 255 functions
@@ -38,7 +75,7 @@ header-includes:
   \item C-level ABI, no inline assembly
 \end{itemize}
 \vspace{0.2em}
-{\footnotesize\color{red!70!black} No hardware implementation existed}
+{\footnotesize\color{red!70!black} Spec only for the extension, no integration yet}
 \end{alertblock}
 \end{column}
 \begin{column}{0.32\textwidth}
@@ -63,17 +100,15 @@ header-includes:
   arr/.style={-Latex, thick, gray}
 ]
   \node[box, fill=violet!15] (spinal) {SpinalHDL};
-  \node[box, fill=blue!15, below=0.4cm of spinal] (vexii) {VexiiRiscv};
+  \node[box, fill=blue!15, below=0.4cm of spinal] (vexii) {VexiiRiscv with CXU};
   \node[box, fill=teal!15, below=0.4cm of vexii] (litex) {LiteX SoC};
-  \node[box, fill=green!15, below=0.4cm of litex] (buildroot) {Buildroot Linux};
-  \node[box, fill=orange!15, below=0.4cm of buildroot] (runtime) {CXU Runtime Library};
-  \node[box, fill=red!10, below=0.4cm of runtime] (bench) {AES / GZIP / TFLite};
+  \node[box, fill=green!15, below=0.4cm of litex] (buildroot) {Buildroot (Linux)};
+  \node[box, fill=red!10, below=0.4cm of buildroot] (bench) {CXU runtime};
 
   \draw[arr] (spinal)--(vexii);
   \draw[arr] (vexii)--(litex);
   \draw[arr] (litex)--(buildroot);
-  \draw[arr] (buildroot)--(runtime);
-  \draw[arr] (runtime)--(bench);
+  \draw[arr] (buildroot)--(bench);
 \end{tikzpicture}
 \end{center}
 
@@ -267,10 +302,10 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
-\begin{center}
-\Huge \textbf{5.25$\times$} speedup
-\end{center}
+<!-- \vspace{0.3cm} -->
+<!-- \begin{center} -->
+<!-- \Huge \textbf{5.25$\times$} speedup -->
+<!-- \end{center} -->
 
 ---
 
@@ -292,8 +327,8 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
-\textbf{~10\% end-to-end speedup}
+<!-- \vspace{0.3cm} -->
+<!-- \textbf{~10\% end-to-end speedup} -->
 
 ---
 
@@ -313,15 +348,15 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
-\textbf{~13\% compute speedup}
+<!-- \vspace{0.3cm} -->
+<!-- \textbf{~13\% compute speedup} -->
 
 ---
 
 # Benchmarks
 
 - \textbf{Bare‑metal}: `mcycle` / `minstret` counters
-- \textbf{Linux}: timing with utils provided in ''time.h''
+- \textbf{Linux}: timing with utils provided by POSIX time utils
 - Multiple input sizes to separate fixed overhead from per‑byte savings
 - Compiler flags identical (force only `-O3`) for both baseline and CXU versions
 
@@ -347,13 +382,18 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 | Invocation | Assembly (`custom‑0/1/2/3`) | C with compiler support | Pure C, portable API |
 | Shared state | No | Yes (custom CSRs) | Yes (`cxdata` CSR) |
 | OS support | Bare‑metal only | Bare‑metal + RTOS | \textbf{Full Linux (Buildroot)} |
-| Portability | Across cores | CPU‑specific | Designed for cross‑core reuse |
+| Portability | Across cores | CPU‑specific | One core for now, designed for cross‑core reuse as CFU playground |
 
 ---
 
 # How to Add a New Extension
 
-TODO: ................................
+\begin{itemize}
+  \item Create the extension with the interface provided in examples
+  \item Compile the system-on-chip with the created extension (add a cli argument: `--cxu <path-to-cxu-source>` to the build command)
+  \item \textbf{Note - there's no Device Tree entries}: extension addresses hard-coded.
+\end{itemize}
+
 
 ---
 
@@ -374,7 +414,7 @@ TODO: ................................
   \item Process context-switch support (save/restore CXU state)
   \item Native pipeline CSRs (bypass Wishbone)
   \item Device Tree integration (dynamic discovery)
-  \item Multi-process tests andnbenchmarks under Linux
+  \item Multi-process tests andnbenchmarks on Linux
 \end{itemize}
 
 ---
@@ -396,3 +436,7 @@ TODO: ................................
 \centering\footnotesize\url{https://github.com/pmozil/vexiiriscv}
 
 \centering\footnotesize\url{https://github.com/pmozil/cxu-buildroot}
+
+---
+
+# Imagine bibliography here
