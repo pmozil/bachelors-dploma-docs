@@ -8,11 +8,15 @@ theme: "default"
 colortheme: "default"
 fontsize: 10pt
 aspectratio: 169
+bibliography: bibliography.bib
+link-citations: true
 header-includes:
   - \usepackage{tikz}
   - \usetikzlibrary{shapes, arrows.meta, fit, positioning, backgrounds, decorations.pathreplacing}
   - \usepackage{booktabs}
   - \usepackage{colortbl}
+  - \usepackage{pgfplots}
+  - \pgfplotsset{compat=1.18}
   - |
     \setbeamertemplate{footline}{
       \leavevmode%
@@ -35,7 +39,7 @@ header-includes:
 \begin{itemize}
   \item RISC-V is designed with extensions in mind
   \item The instruction set allows for many custom commands
-  \item Official extensions are managed by the RISC-V commmitee
+  \item Official extensions are managed by the RISC-V commmitee [@riscv-spec]
 \end{itemize}
 \end{block}
 \end{column}
@@ -95,20 +99,28 @@ header-includes:
 
 \begin{center}
 \begin{tikzpicture}[
-  box/.style={draw, rectangle, minimum width=3.8cm, minimum height=0.65cm,
-              align=center, font=\small\bfseries, rounded corners=3pt},
-  arr/.style={-Latex, thick, gray}
+  layer/.style={draw, rounded corners, minimum width=8cm,
+                minimum height=0.8cm, align=center,
+                font=\small\bfseries},
+  arr/.style={-Latex, thick},
+  node distance=0.18cm
 ]
-  \node[box, fill=violet!15] (spinal) {SpinalHDL};
-  \node[box, fill=blue!15, below=0.4cm of spinal] (vexii) {VexiiRiscv with CXU};
-  \node[box, fill=teal!15, below=0.4cm of vexii] (litex) {LiteX SoC};
-  \node[box, fill=green!15, below=0.4cm of litex] (buildroot) {Buildroot (Linux)};
-  \node[box, fill=red!10, below=0.4cm of buildroot] (bench) {CXU runtime};
 
-  \draw[arr] (spinal)--(vexii);
-  \draw[arr] (vexii)--(litex);
-  \draw[arr] (litex)--(buildroot);
-  \draw[arr] (buildroot)--(bench);
+\node[layer, fill=green!15] (app) {Applications / Benchmarks};
+\node[layer, fill=green!10, below=of app] (runtime) {CXU Runtime Library};
+\node[layer, fill=blue!10, below=of runtime] (linux) {Linux Userspace + Kernel};
+\node[layer, fill=blue!15, below=of linux] (opensbi) {OpenSBI + U-Boot};
+\node[layer, fill=orange!15, below=of opensbi] (soc) {LiteX SoC};
+\node[layer, fill=red!15, below=of soc] (cpu) {VexiiRiscv + CXU Plugin};
+\node[layer, fill=violet!15, below=of cpu] (fpga) {FPGA Hardware};
+
+\draw[arr] (app)--(runtime);
+\draw[arr] (runtime)--(linux);
+\draw[arr] (linux)--(opensbi);
+\draw[arr] (opensbi)--(soc);
+\draw[arr] (soc)--(cpu);
+\draw[arr] (cpu)--(fpga);
+
 \end{tikzpicture}
 \end{center}
 
@@ -120,7 +132,7 @@ header-includes:
 \begin{column}{0.48\textwidth}
 \textbf{What it is}
 \begin{itemize}
-  \item Hardware description language built on Scala
+  \item Hardware description language built on Scala [@spinalhdl]
   \item Generates Verilog/VHDL
   \item Modular plugin system: no plugin may alter the behaviour of another one
 \end{itemize}
@@ -137,7 +149,7 @@ VexiiRiscvLitex(\\
 
 ---
 
-# LiteX SoC Framework
+# LiteX SoC Framework [@LiteXGitHub]
 
 \begin{center}
 \begin{tikzpicture}[
@@ -190,7 +202,7 @@ VexiiRiscvLitex(\\
 
 ---
 
-# Buildroot
+# Buildroot [@cxuBuildroot]
 
 \begin{columns}[T]
 \begin{column}{0.44\textwidth}
@@ -255,6 +267,33 @@ VexiiRiscvLitex(\\
 
 ---
 
+# CXU Instruction Execution Flow
+
+\begin{center}
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners, minimum width=2.8cm,
+               minimum height=0.8cm, align=center,
+               font=\small\bfseries},
+  arr/.style={-Latex, thick},
+  node distance=0.2cm
+]
+
+\node[box, fill=blue!10] (api) {API call};
+\node[box, fill=blue!15, right=of api] (csr) {Set cxidx CSR};
+\node[box, fill=teal!15, right=of csr] (decode) {Call Extension};
+\node[box, fill=green!15, right=of decode] (exec) {CXU executes};
+\node[box, fill=orange!15, right=of exec] (wb) {Write back result};
+
+\draw[arr] (api)--(csr);
+\draw[arr] (csr)--(decode);
+\draw[arr] (decode)--(exec);
+\draw[arr] (exec)--(wb);
+
+\end{tikzpicture}
+\end{center}
+
+---
+
 # CXU Runtime Library
 
 \begin{columns}[T]
@@ -295,7 +334,7 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
-# Case Study: AES GF($2^8$)
+# Case Study: AES GF($2^8$) [@Marshall2020AES]
 
 \begin{center}
 \begin{tikzpicture}[
@@ -311,14 +350,14 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \end{tikzpicture}
 \end{center}
 
-<!-- \vspace{0.3cm} -->
-<!-- \begin{center} -->
-<!-- \Huge \textbf{5.25$\times$} speedup -->
-<!-- \end{center} -->
+\vspace{0.3cm}
+\begin{center}
+\Huge \textbf{5.25$\times$} speedup
+\end{center}
 
 ---
 
-# Case Study: GZIP / DEFLATE
+# Case Study: GZIP / DEFLATE [@gzipRepo]
 
 \begin{center}
 \begin{tikzpicture}[
@@ -336,12 +375,12 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \end{tikzpicture}
 \end{center}
 
-<!-- \vspace{0.3cm} -->
-<!-- \textbf{~10\% end-to-end speedup} -->
+\vspace{0.3cm}
+\textbf{~10\% end-to-end speedup}
 
 ---
 
-# Case Study: TFLite Micro MAC
+# Case Study: TFLite Micro MAC [@David2021TFLiteMicro]
 
 \begin{center}
 \begin{tikzpicture}[
@@ -369,6 +408,7 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 | AES       | 20,948      | 209 (1%) | 4       | 36 tiles   |
 | GZIP      | 20,666      | 20       | 4       | 36 tiles   |
 | TFLite    | 20,698      | folded   | 4       | 36 tiles   |
+| All three | 2,1394      | 229      | 4       | 36 tiles   |
 
 *A single CXU extension will likely (unless it's very complex) comsume little fpga fabric (~1% or less)*
 
@@ -429,7 +469,7 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 # Similar extension interfaces / playgrounds
 
-| Feature | CFU Playground | FRANCIS‑V | CXU Playground (this work) |
+| Feature | CFU Playground[@CFUPlayground2022] | FRANCIS‑V[@Egert2023FRANCISV] | CXU Playground (this work) |
 |---------|----------------|-----------|--------------------------------|
 | Interface | CFU (single extension) | Core‑V‑XIF | CXU (multiple extensions) |
 | Invocation | Assembly (`custom‑0/1/2/3`) | C with compiler support | Pure C, portable API |
@@ -439,4 +479,9 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
-# Imagine bibliography here
+# References
+
+\footnotesize
+
+::: {#refs}
+:::
