@@ -286,6 +286,15 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
+# Benchmarks
+
+- \textbf{Bare‑metal}: `mcycle` / `minstret` counters
+- \textbf{Linux}: timing with utils provided by POSIX time utils
+- Multiple input sizes to separate fixed overhead from per‑byte savings
+- Compiler flags identical (force only `-O3`) for both baseline and CXU versions
+
+---
+
 # Case Study: AES GF($2^8$)
 
 \begin{center}
@@ -353,15 +362,6 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
-# Benchmarks
-
-- \textbf{Bare‑metal}: `mcycle` / `minstret` counters
-- \textbf{Linux}: timing with utils provided by POSIX time utils
-- Multiple input sizes to separate fixed overhead from per‑byte savings
-- Compiler flags identical (force only `-O3`) for both baseline and CXU versions
-
----
-
 # FPGA Resource Usage (Arty S7-50, XC7S50)
 
 | Extension | Logic cells | CXU cost | DSP48E1 | Block RAM |
@@ -374,22 +374,10 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
-# Similar extension interfaces / playgrounds
-
-| Feature | CFU Playground | FRANCIS‑V | CXU Playground (this work) |
-|---------|----------------|-----------|--------------------------------|
-| Interface | CFU (single extension) | Core‑V‑XIF | CXU (multiple extensions) |
-| Invocation | Assembly (`custom‑0/1/2/3`) | C with compiler support | Pure C, portable API |
-| Shared state | No | Yes (custom CSRs) | Yes (`cxdata` CSR) |
-| OS support | Bare‑metal only | Bare‑metal + RTOS | \textbf{Full Linux (Buildroot)} |
-| Portability | Across cores | CPU‑specific | One core for now, designed for cross‑core reuse as CFU playground |
-
----
-
 # How to Add a New Extension
 
 \begin{itemize}
-  \item Create the extension with the interface provided in examples
+  \item Create the extension with the interface provided in examples (do mind - the names of the module go as `Cxu0`, `Cxu1`, and so on)
   \item Compile the system-on-chip with the created extension (add a cli argument: `--cxu <path-to-cxu-source>` to the build command)
   \item \textbf{Note - there's no Device Tree entries}: extension addresses hard-coded.
 \end{itemize}
@@ -436,6 +424,18 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \centering\footnotesize\url{https://github.com/pmozil/vexiiriscv}
 
 \centering\footnotesize\url{https://github.com/pmozil/cxu-buildroot}
+
+---
+
+# Similar extension interfaces / playgrounds
+
+| Feature | CFU Playground | FRANCIS‑V | CXU Playground (this work) |
+|---------|----------------|-----------|--------------------------------|
+| Interface | CFU (single extension) | Core‑V‑XIF | CXU (multiple extensions) |
+| Invocation | Assembly (`custom‑0/1/2/3`) | C with compiler support | Pure C, portable API |
+| Shared state | No | Yes (custom CSRs) | Yes (`cxdata` CSR) |
+| OS support | Bare‑metal only | Bare‑metal + RTOS | \textbf{Full Linux (Buildroot)} |
+| Portability | Across cores | CPU‑specific | One core for now, designed for cross‑core reuse as CFU playground |
 
 ---
 
