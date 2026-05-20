@@ -396,8 +396,8 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \end{tikzpicture}
 \end{center}
 
-<!-- \vspace{0.3cm} -->
-<!-- \textbf{~13\% compute speedup} -->
+\vspace{0.3cm}
+\textbf{~13\% compute speedup}
 
 ---
 
@@ -408,7 +408,7 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 | AES       | 20,948      | 209 (1%) | 4       | 36 tiles   |
 | GZIP      | 20,666      | 20       | 4       | 36 tiles   |
 | TFLite    | 20,698      | folded   | 4       | 36 tiles   |
-| All three | 2,1394      | 229      | 4       | 36 tiles   |
+| All three | 21,394      | 229      | 4       | 36 tiles   |
 
 *A single CXU extension will likely (unless it's very complex) comsume little fpga fabric (~1% or less)*
 
@@ -442,7 +442,7 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
   \item Process context-switch support (save/restore CXU state)
   \item Native pipeline CSRs (bypass Wishbone)
   \item Device Tree integration (dynamic discovery)
-  \item Multi-process tests andnbenchmarks on Linux
+  \item Multi-process tests and benchmarks on Linux
 \end{itemize}
 
 ---
