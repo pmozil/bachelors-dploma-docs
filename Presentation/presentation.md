@@ -1,7 +1,7 @@
 ---
 title: "CXU Playground"
 subtitle: "RISC-V Custom Extension Development Framework"
-author: "Petro Mozil"
+author: "Petro Mozil, supervised by Oleg Farenyuk"
 institute: "Ukrainian Catholic University"
 date: 2026
 theme: "default"
@@ -21,13 +21,67 @@ header-includes:
     \setbeamertemplate{footline}{
       \leavevmode%
       \hbox{%
-      \begin{beamercolorbox}[wd=.95\paperwidth,ht=2.25ex,dp=1ex,leftskip=.3cm]{}%
+      \begin{beamercolorbox}[wd=.92\paperwidth,ht=2.25ex,dp=1ex,leftskip=.3cm]{}%
       \end{beamercolorbox}%
-      \begin{beamercolorbox}[wd=.05\paperwidth,ht=4.25ex,dp=1ex,rightskip=.3cm plus1fil]{}%
+      \begin{beamercolorbox}[wd=.08\paperwidth,ht=4.25ex,dp=1ex,rightskip=.3cm plus1fil]{}%
         \insertframenumber{} / \inserttotalframenumber
       \end{beamercolorbox}}%
       \vskip0pt%
     }
+---
+
+# What is RISC-V?
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{An open instruction set architecture}
+\begin{itemize}
+  \item RISC-V is a free and open ISA based on RISC principles [@riscv-spec]
+  \item Unlike ARM or x86, anyone can implement it without licensing fees
+  \item Maintained by the RISC-V International non-profit
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Why it matters}
+\begin{itemize}
+  \item Modular: a small mandatory base + optional standard extensions (M, F, V, \ldots)
+  \item Custom extension space (opcodes \texttt{custom-0} through \texttt{custom-3}) is reserved for exactly this kind of work
+  \item Growing ecosystem: Linux, GCC, LLVM, QEMU all support it
+\end{itemize}
+\end{column}
+\end{columns}
+
+---
+
+# What is a CFU / CXU?
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{CFU — Custom Function Unit}
+\begin{itemize}
+  \item A hardware block attached to a RISC-V core that executes custom instructions
+  \item Receives two register inputs (\texttt{rs1}, \texttt{rs2}), returns one result (\texttt{rd})
+  \item Defined by the CFU Logical Interface spec; reusable across cores
+  \item \textbf{CFU Playground} provides a ready-made sandbox for developing CFUs
+\end{itemize}
+\vspace{0.2em}
+{\footnotesize\color{orange!80!black} One extension per thread; invoked via inline assembly}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{CXU — Custom Extension Unit}
+\begin{itemize}
+  \item Next-generation spec: supports \textbf{multiple simultaneous extensions} selectable at runtime
+  \item Shared persistent state via \texttt{cxdata} CSR
+  \item C-level ABI — no inline assembly required
+  \item Designed for cross-core portability
+\end{itemize}
+\vspace{0.2em}
+{\footnotesize\color{black} This work is (to the extent of the author's knowledge) the \textbf{first hardware implementation} of the CXU spec}
+\end{alertblock}
+\end{column}
+\end{columns}
+
 ---
 
 # Motivation -- why use extension plugins at all?
@@ -102,7 +156,7 @@ header-includes:
   layer/.style={draw, rounded corners, minimum width=8cm,
                 minimum height=0.8cm, align=center,
                 font=\small\bfseries},
-  arr/.style={-Latex, thick},
+  arr/.style={-Latex},
   node distance=0.18cm
 ]
 
@@ -183,20 +237,28 @@ VexiiRiscvLitex(\\
 # Target hardware
 
 \begin{columns}[T]
-\begin{column}{0.5\textwidth}
+\begin{column}{0.35\textwidth}
 \textbf{Target: Arty S7-50}
 \begin{itemize}
-  \item Spartan-7 XC7S50
+  \item The \textbf{Arty S7-50} is a development board by Digilent, designed for FPGA prototyping
+  \item Carries a Spartan-7 XC7S50 FPGA
   \item 50 MHz, 256 MB DDR3
 \end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
+\begin{column}{0.30\textwidth}
+\begin{center}
+\includegraphics[width=\linewidth]{arty-s7.png}
+{\footnotesize Arty S7-50 development board}
+\end{center}
+\end{column}
+\begin{column}{0.30\textwidth}
 \textbf{FPGA utilisation (With AES example)}
 \begin{itemize}
-  \item CPU + SoC: 23\%
-  \item Single CXU extension: $\approx$ 1\%
+  \item CPU + SoC: 23\% ($\approx$ 21,000 logic cells)
+  \item Single CXU extension: $\approx$ 1 \% (200 cells)
   \item Rest: free
 \end{itemize}
+{\footnotesize\color{gray} Area figures tell the developer how much fabric remains — they are not a quality metric of the chip itself.}
 \end{column}
 \end{columns}
 
@@ -205,12 +267,12 @@ VexiiRiscvLitex(\\
 # Buildroot [@cxuBuildroot]
 
 \begin{columns}[T]
-\begin{column}{0.44\textwidth}
+\begin{column}{0.38\textwidth}
 \begin{tikzpicture}[
-  box/.style={draw, rectangle, rounded corners, minimum width=3.5cm,
-              minimum height=0.55cm, align=center, font=\small},
+  box/.style={draw, rectangle, rounded corners, minimum width=4.2cm,
+              minimum height=0.75cm, align=center, font=\normalsize\bfseries},
   arr/.style={-Latex, thick, gray},
-  node distance=0.35cm
+  node distance=0.45cm
 ]
   \node[box, fill=gray!10] (cfg) {Buildroot config};
   \node[box, fill=blue!10, below=of cfg] (kern) {Linux kernel};
@@ -224,10 +286,11 @@ VexiiRiscvLitex(\\
   \draw[arr] (rootfs)--(boot);
 \end{tikzpicture}
 \end{column}
-\begin{column}{0.52\textwidth}
-\textbf{Boot sequence}
+\begin{column}{0.30\textwidth}
 \begin{block}{}
-{\footnotesize LiteX BIOS $\to$ OpenSBI $\to$ U-Boot $\to$ Linux $\to$ CXU app}
+\begin{center}
+\includegraphics[width=\linewidth]{buildroot-logo.png}
+\end{center}
 \end{block}
 \end{column}
 \end{columns}
@@ -263,7 +326,8 @@ VexiiRiscvLitex(\\
 \end{tikzpicture}
 \end{center}
 
-\texttt{cxidx} CSR selects active extension. Stalls pipeline for multi-cycle ops.
+\texttt{cxidx} CSR selects active extension.
+Plugin stalls pipeline for multi-cycle ops.
 
 ---
 
@@ -271,10 +335,10 @@ VexiiRiscvLitex(\\
 
 \begin{center}
 \begin{tikzpicture}[
-  box/.style={draw, rounded corners, minimum width=2.8cm,
+  box/.style={draw, rounded corners, minimum width=2cm,
                minimum height=0.8cm, align=center,
                font=\small\bfseries},
-  arr/.style={-Latex, thick},
+  arr/.style={-Latex},
   node distance=0.2cm
 ]
 
@@ -325,7 +389,7 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
-# Benchmarks
+# Benchmark Methodology
 
 - \textbf{Bare‑metal}: `mcycle` / `minstret` counters
 - \textbf{Linux}: timing with utils provided by POSIX time utils
@@ -334,8 +398,10 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 
 ---
 
-# Case Study: AES GF($2^8$) [@Marshall2020AES]
+# Experiment: AES GF($2^8$) [@Marshall2020AES]
 
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
 \begin{center}
 \begin{tikzpicture}[
   box/.style={draw, rectangle, rounded corners, minimum width=4cm,
@@ -343,21 +409,32 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
   arr/.style={-Latex, thick}
 ]
   \node[box, fill=blue!10] (aes) {AES round};
-  \node[box, fill=teal!20, below=0.3cm of aes] (gf) {$\mathrm{GF}(2^8)$ arithmetic};
+  \node[box, fill=teal!20, below=0.3cm of aes] (gf) {$\mathrm{GF}(2^8)$ field arithmetic};
   \node[box, fill=green!20, below=0.3cm of gf] (insn) {Single CXU instruction};
   \draw[arr] (aes)--(gf);
   \draw[arr] (gf)--(insn);
 \end{tikzpicture}
 \end{center}
-
-\vspace{0.3cm}
+\vspace{0.2cm}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Experiment conditions}
+\begin{itemize}
+  \item Conducted \textbf{10 times} per input size on bare-metal and under Linux
+  \item Compiler flags: \texttt{-O3} only, identical for baseline and CXU versions
+  \item Bare-metal timing: \texttt{mcycle} CSR snapshots (nearly deterministic)
+  \item Linux timing: \texttt{clock\_gettime}, variance $\leq \pm 2\%$
+\end{itemize}
+\end{block}
 \begin{center}
 \Huge \textbf{5.25$\times$} speedup
 \end{center}
+\end{column}
+\end{columns}
 
 ---
 
-# Case Study: GZIP / DEFLATE [@gzipRepo]
+# Experiment: GZIP / DEFLATE [@gzipRepo]
 
 \begin{center}
 \begin{tikzpicture}[
@@ -378,10 +455,15 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 \vspace{0.3cm}
 \textbf{~10\% end-to-end speedup}
 
+\vspace{0.2cm}
+\footnotesize Experiment conducted \textbf{10 times} per file size; compiler flags \texttt{-O3} for both versions. End-to-end gain is diluted by filesystem I/O at small file sizes ($<$ 10 KB).
+
 ---
 
-# Case Study: TFLite Micro MAC [@David2021TFLiteMicro]
+# Experiment: TFLite Micro MAC [@David2021TFLiteMicro]
 
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
 \begin{center}
 \begin{tikzpicture}[
   box/.style={draw, rectangle, rounded corners, minimum width=4cm,
@@ -395,9 +477,18 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
   \draw[arr] (mac)--(insn);
 \end{tikzpicture}
 \end{center}
-
-\vspace{0.3cm}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Experiment conditions}
+\begin{itemize}
+  \item Conducted \textbf{10 times} per layer size
+  \item Compiler flags: \texttt{-O3}, identical for baseline and CXU
+  \item \textbf{TFLite Micro does not use platform-specific SIMD/DSP optimizations} in this configuration — the baseline is purely scalar C
+\end{itemize}
+\end{block}
 \textbf{~13\% compute speedup}
+\end{column}
+\end{columns}
 
 ---
 
@@ -410,7 +501,11 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
 | TFLite    | 20,698      | folded   | 4       | 36 tiles   |
 | All three | 21,394      | 229      | 4       | 36 tiles   |
 
-*A single CXU extension will likely (unless it's very complex) comsume little fpga fabric (~1% or less)*
+*A single CXU extension will likely (unless it's very complex) consume little FPGA fabric ($\approx$1\% or less).*
+
+\vspace{0.2em}
+\footnotesize\color{gray} \textbf{Note on area:} Logic cell counts are not a measure of SoC quality.
+They are a practical indicator for the developer — showing how much fabric remains available for additional extensions or SoC peripherals.
 
 ---
 
@@ -444,6 +539,99 @@ uint32\_t r = cxu\_call(a, b);\\[0.3em]
   \item Device Tree integration (dynamic discovery)
   \item Multi-process tests and benchmarks on Linux
 \end{itemize}
+
+---
+
+# Reviewer Questions: Benchmark Repeatability \& Variance
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Methodology}
+\begin{itemize}
+  \item Each benchmark run repeated \textbf{10 times} per input size
+  \item Linux results: measured with \texttt{clock\_gettime}
+  \item Bare-metal results: \texttt{mcycle} / \texttt{minstret} CSR snapshots
+  \item Variance was $\leq \pm 2\%$ for AES across all buffer sizes
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Observed jitter sources}
+\begin{itemize}
+  \item Linux scheduler preemption ($\pm 5-6\%$ jitter, no effect on mean speedup)
+  \item DDR3 refresh cycles
+  \item GZIP: filesystem I/O dominates variance at small file sizes
+\end{itemize}
+\end{block}
+{\footnotesize Bare-metal runs are nearly deterministic -- no measurable variance between runs.}
+\end{column}
+\end{columns}
+
+---
+
+# Reviewer Questions: Quantifying Overhead Sources
+
+| Overhead Source | Cost | Workload Impact |
+|----------------|------|-----------------|
+| Extension switch (\texttt{cxidx} change) | $\approx$ 50--60 cycles | Amortized: batch calls per extension |
+| Linux syscall / scheduler | $\pm 5-6\%$ jitter | No change to mean speedup |
+| Filesystem I/O (GZIP) | Dominates at $<$ 10 KB | Dilutes compute speedup end-to-end |
+
+\vspace{0.3em}
+\begin{block}{Key takeaway}
+CXU switch latency is a \textbf{one-time configuration cost} -- all three benchmarks batch extension calls to amortize it.
+The raw compute speedup (AES $5.25\times$) is unaffected; GZIP end-to-end gain ($\approx10\%$) is diluted by I/O, not CSR overhead.
+\end{block}
+
+---
+
+# Reviewer Questions: Kernel Context-Switch Support
+
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\textbf{What needs to be done}
+\begin{itemize}
+  \item Add \texttt{cxidx} + \texttt{cxdata} to the Linux \texttt{task\_struct}
+  \item Instrument \texttt{\_\_switch\_to()} to save/restore those registers
+  \item Add a kernel driver for mutual exclusion (replace current UIO shim)
+  \item Expose extensions via \texttt{/dev/cxu} with \texttt{ioctl} for process isolation
+\end{itemize}
+\end{column}
+\begin{column}{0.44\textwidth}
+\begin{alertblock}{Estimated effort}
+\begin{itemize}
+  \item Context-switch patch: \textbf{$\approx$ 1--2 weeks} (well-defined kernel hook)
+  \item Kernel driver + locking: \textbf{$\approx$ 2--4 weeks}
+  \item Device Tree nodes: \textbf{$\approx$ 1 week} (LiteX generator change)
+\end{itemize}
+\end{alertblock}
+{\footnotesize CSR latency is a \textbf{LiteX integration issue}: mapping via Wishbone instead of native pipeline registers. Moving \texttt{cxidx}/\texttt{cxdata} to pipeline registers would bring latency to 2-3 cycles.}
+\end{column}
+\end{columns}
+
+---
+
+# Reviewer Questions: Scalability to Memory-Accessing Extensions
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Current constraint}
+\begin{itemize}
+  \item CXU instructions pass only \texttt{rs1}, \texttt{rs2} $\to$ \texttt{rd}
+  \item No direct bus-master port for the CXU -- all data must flow through CPU registers
+  \item TFLite MAC result ($\approx13\%$) reflects this: most cycles are memory loads, not compute
+  \item CXU spec also allows for a bigger state ($ge$ 4KB). However, this implementation suffers from CSR latency as well.
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{exampleblock}{Path to memory access}
+\begin{itemize}
+  \item CXU spec allows extensions to be granted a \textbf{memory port}
+  \item Enables DMA-style bulk operations (e.g.\ full AES block in one call)
+  \item Expected: order-of-magnitude further gains for memory-bound workloads
+\end{itemize}
+\end{exampleblock}
+\end{column}
+\end{columns}
 
 ---
 
